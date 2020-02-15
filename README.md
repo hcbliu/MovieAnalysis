@@ -5,6 +5,6 @@ The user will enter a movie title (or actor/actress) and receive information on 
 
 The respository is structured as follows:
 
--Readme (this doc): summarizes most important information about the project
--mastercode.py: this is our project's python code
+-Readme (this doc): summarizes most important information about the project  
+-mastercode.py: this is our project's python code  
 -additional files and folders containing data (for example Oscar_data)
