@@ -1,5 +1,5 @@
 #This .py file is where we will create our final project.
-#KR 2.20.20 -- this is a branch where I can try out whatever the heck I want!
+#KR 2.20.20 -- this is a comment for fun.
 ##################
 # Movie Analysis #
 ##################
