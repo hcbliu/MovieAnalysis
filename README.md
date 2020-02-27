@@ -2,12 +2,13 @@
 This project is currently in progress. The goal is to evaluate movies by various socially conscious criteria. 
 
 ## Objective  
-An app that displays information about movies. For example, a user may want to know how socially conscious the movie Inception is. The app prompts the user to type in the name of the movie, and then returns information about the movie which includes: movie title, release year, short synopsis, Bechdel test scores, explanation of the test scores, % of cast that are women, ratings, etc.
+Our goal is to create an app that displays information about movies. For example, a user may want to know how socially conscious the movie Inception is. The app prompts the user to type in the name of the movie, and then returns information about the movie which includes: movie title, release year, short synopsis, Bechdel test scores, explanation of the test scores, % of cast that are women, ratings, etc.
 
 ## Structure  
 The respository is structured as follows:  
 -Readme (this doc): summarizes most important information about the project    
--mastercode.py: this is our project's python code, combining different people's work    
+-mastercode.py: this is our project's python code, combining different people's work 
+  
 Everyone also has an individual branch containing the latest work that they sent via email as of 2.26.20.
 
 ## Data  
