@@ -9,7 +9,8 @@
     # %women crew
     # Bechdel test
 #Note: Betty's API work has not yet been merged in.
-#The final dataset at this point is called movietests_widedf_v2. 
+#The final dataset at this point is ccurrently alled movietests_widedf_v2. 
+#Although this name is a bit long, the thinking is as follows:
     #movietests means that it's integrating all tests
     #wide indicates that it's on the movie level (instead of movie/person)
     #df indicates it's a pandas dataframe
@@ -23,7 +24,7 @@ from bs4 import BeautifulSoup
 import requests
 
 #################################
-# Read Demo Datasets from CSVs  #
+# Read Movie Datasets from CSVs #
 #################################
 
 #Challenge: datasets are too large to save on GitHub, so individuals using this 
@@ -37,13 +38,23 @@ import requests
 moviemetadata = pd.read_csv('movies_metadata.csv', engine = 'python')
 moviecredits = pd.read_csv('credits.csv', engine = 'python')
 
-#View which columns are available:
-print('View CSV data: list of columns in moviemetadata\n', [i for i in moviemetadata.columns])
-print('View CSV data: list of columns in moviecredits\n', [i for i in moviecredits.columns])
-
-#View the first few rows of each dataset:
-print('View CSV data: first five rows of moviemetadata\n', moviemetadata.head())
-print('View CSV data: first five rows of moviecredits\n', moviecredits.head())
+#Define a function to view the datasets
+#Input: dsname = dataframe
+#Returned: nothing -- this is just for printing
+def viewdata(dsname, desc = 'add description here'):
+    name =[x for x in globals() if globals()[x] is dsname][0]
+    print('------------------------------------------------------')
+    print('THREE-PART OVERVIEW OF', name.upper())
+    print('Description:', desc)
+    print('  1. Columns in', name)
+    for i in range(len(dsname.columns)):
+        print('\t', dsname.columns[i], end ='\n')
+    print('  2. Shape of dataframe:', dsname.shape)
+    print('\n  3. Use head() to see 5 Rows')
+    print(dsname.head()) 
+    
+viewdata(moviemetadata, 'This is an original CSV from kaggle.')
+viewdata(moviecredits, 'This is an original CSV from kaggle.')
 
 #######################
 # Sindu work on CSVs  #
@@ -54,12 +65,12 @@ Date:  02/26/20
 
 Purpose:
 The cast and crew columns were not not in an easily
-#usable format, so Sindu processed the CSVs to create two dataframes:
-#1) castdf shows which cast members are in each movie (row driver = movie/person)
-#2) crewdf shows which crew members (row driver = movie/person)
-#worked on each movie. Ultimately, in spite of all of the work to translate
-#the entries to JSON form so that they could be loaded, some of the
-#entries were unreadable.
+usable format, so Sindu processed the CSVs to create two dataframes:
+   1) castdf shows which cast members are in each movie (each row has a movie/person combination)
+   2) crewdf shows which crew members are in each movie (also movie/person level)
+worked on each movie. Ultimately, in spite of all of the work to translate
+the entries to JSON form so that they could be loaded, some of the
+entries were unreadable.
 '''
 
 #PART 1: CREATION OF DATAFRAME FOR CAST
@@ -126,6 +137,8 @@ for i in range(len(finalcast)):
 castdf = pd.DataFrame(pdfinalcast)
 castdf.columns = ['name', 'id', 'gender']
 
+#KR addition: view the dataset
+viewdata(castdf, 'This is half of the processed form of moviecredits from Kaggle.')
 
 #PART 2: CREATION OF DATAFRAME FOR CREW
 #(it's basically the same stuff I was doing before)
@@ -175,6 +188,8 @@ for i in range(len(finalcrew)):
 crewdf = pd.DataFrame(pdfinalcrew)
 crewdf.columns = ['name', 'id', 'department', 'job', 'gender']
 
+#KR addition: view the dataset
+viewdata(crewdf, 'This is half of the processed form of moviecredits from Kaggle.')
 
 ##############################
 # Kamaneeya work on scraping #
@@ -190,12 +205,8 @@ and the description of the score for each year and creates a pandas dataframe
 with the information.
 '''
 
-# Importing libraries
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-
 # Years of data needed --> can be edited
+#KR updated to include whole range rather than just being most recent 3 years
 years = [str(x) for x in list(range(1980, 2020))]
 
 # Create Empty dataset to fill the data
@@ -226,6 +237,8 @@ for yr in years:
                 ,ignore_index = True)
 
 #Set up titles that will have no differences in spaacing or capitalization
+#KR addition: view the dataset
+viewdata(bechdel_test, 'This web-scrabed dataframe shows how movies fared on the Bechdel test')
 
 #######################
 # Kayla work on merge #
@@ -307,8 +320,8 @@ titlesv3["year"] = titlesv3.date.apply(lambda x: x[:4])
 titlesv4 = titlesv3[["title", "year"]]
 
 #Check that everything worked correctly
-print('View the first five obs in the new titles dataset\n', titlesv4.head())
-
+viewdata(titlesv4, 'This is the processed version of the moviemetadata from kaggle.')
+        
 #####3. STEP 3: MERGE SINDU'S DATAFRAMES #######
 #Merge all columns on cast/crew gender using the id field. Note that these datasets
 #all have the same ID field because they are from here:
@@ -323,9 +336,9 @@ merge(castnum,on='id',how ='outer')
 #Re-name the columns after processing. Note: I am using all lower case for consistency
 castcrew_widedf.columns = ['title', 'year', 'crew_pct_women', 'crew_n', \
                            'cast_pct_women', 'cast_n']
-print('View the first five obs in the new wide dataset', castcrew_widedf.head())
 
-
+print('View the new wide dataset')
+viewdata(castcrew_widedf, 'This is the the merge of all Kaggle datasets on the movie level')
 ##### STEP 4: MERGE SINDU'S WORK W/ KAMANEEYA'S WORK #######
 #Creating a merge key that uses all caps and concatenates years and titles w/o spaces.
 #The goals here are two-fold:
@@ -342,12 +355,8 @@ apply(lambda y: y.replace(' ', ''))+ bechdel_test.year
 #However, should ultimately use outer join.
 movietests_widedf_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'right', on = 'mergekey')
 
-print('Print the column names of movietests_widedf_v1:\n', \
-      [x for x in movietests_widedf_v1.columns])
-
-print('Print the first 10 obs of the merged dataset called movietests_widedf_v1\n',\
-      movietests_widedf_v1.head(10))
-
+print('View the new fully merged dataset')
+viewdata(movietests_widedf_v1, 'This merges Kaggle and web-scraped data.')
 #### QUALITY CHECKS ON MERGES
 
 print('Movies where the titles do not match: looks like capitalization diffs:')
@@ -383,8 +392,7 @@ title_x_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x'
 #KR note as of 2.27.20: This is just a start to data cleaning. More is necessary.
 movietests_widedf_v2 = movietests_widedf_v1.drop(['mergekey', 'title_x','year_y'], axis=1)
 
-print('After dropping unnecessary columns, print the column names of movietests_widedf_v2:\n', \
-      [x for x in movietests_widedf_v2.columns])
+movietests_widedf_v1.rename({'title_x' : 'title', 'year_x':'year'}, inplace = True)
 
 #Address the insufficient sample on certain movies
 
@@ -393,3 +401,6 @@ movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2.fillna('Missing')
+#KR note: next step is add check to confirm that these changes worked.
+
+viewdata(movietests_widedf_v2, 'This contains some cleaning after the final merge. It is currently the final dataset')
