@@ -10,6 +10,6 @@ The respository is structured as follows:
 -additional files and folders containing data (for example Oscar_data)
 
 Data sources are listed below:
-CSV files: https://www.kaggle.com/rounakbanik/the-movies-dataset
-Web scraping: https://bechdeltest.com/
+CSV files: https://www.kaggle.com/rounakbanik/the-movies-dataset  
+Web scraping: https://bechdeltest.com/  
 API work: https://developers.themoviedb.org/3/getting-started/introduction
