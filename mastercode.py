@@ -476,16 +476,16 @@ movietests_outer_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inp
 ###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate probs found in the quality checks above.
 
 #Drop extra vars from merge
-movietests_outer_v1 = movietests_outer_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
+movietests_outer_v2 = movietests_outer_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
 
 #Address the insufficient sample on certain movies
-movietests_outer_v1['cast_pct_women'][movietests_outer_v1['cast_n'] <= 10] \
+movietests_outer_v2['cast_pct_women'][movietests_outer_v2['cast_n'] <= 10] \
 = 'insufficient sample'
-movietests_outer_v1['crew_pct_women'][movietests_outer_v1['crew_n'] <= 10] \
+movietests_outer_v1['crew_pct_women'][movietests_outer_v2['crew_n'] <= 10] \
 = 'insufficient sample'
-movietests_outer_v1.fillna('Missing', inplace = True)
+movietests_outer_v2.fillna('Missing', inplace = True)
 
 print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
-print(movietests_outer_v1[['crew_pct_women', 'cast_pct_women']].head(20))
+print(movietests_outer_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
-viewdata(movietests_outer_v1, 'This contains some cleaning after the final OUTER JOIN merge.')
+viewdata(movietests_outer_v2, 'This contains some cleaning after the final OUTER JOIN merge.')
