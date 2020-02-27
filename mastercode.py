@@ -206,7 +206,8 @@ with the information.
 '''
 
 # Years of data needed --> can be edited
-#KR updated to include whole range rather than just being most recent 3 years
+#KR updated to include whole range rather than just being most recent 3 years. 
+#Next step is figure out which years are actually on the website, in order to be efficient.
 years = [str(x) for x in list(range(1980, 2020))]
 
 # Create Empty dataset to fill the data
@@ -238,7 +239,7 @@ for yr in years:
 
 #Set up titles that will have no differences in spaacing or capitalization
 #KR addition: view the dataset
-viewdata(bechdel_test, 'This web-scrabed dataframe shows how movies fared on the Bechdel test')
+viewdata(bechdel_test, 'This web-scrabed dataframe shows how movies fared on the Bechdel test.')
 
 #######################
 # Kayla work on merge #
@@ -357,34 +358,51 @@ movietests_widedf_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'right', on
 
 print('View the new fully merged dataset')
 viewdata(movietests_widedf_v1, 'This merges Kaggle and web-scraped data.')
-#### QUALITY CHECKS ON MERGES
 
-print('Movies where the titles do not match: looks like capitalization diffs:')
+
+#### QUALITY CHECKS ON MERGES
+#KR notes on next steps:
+#Ideally use 20 randomly select obs, rather than using head()
+#Run further checks on partial duplicates to check 
+    #a) which data are accurate (particularly in Beneath)
+    #b) which obs should we delete?
+#Confirm the current warning isn't causing problems:
+    #"UserWarning: Boolean Series key will be reindexed to match DataFrame index."
+
+print('QUALITY CHECK: Print 20 obs where the titles do not match:\nNote: looks like capitalization diffs:')
 print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.title_y]\
                            [pd.notnull(movietests_widedf_v1.title_x)]\
-                           [pd.notnull(movietests_widedf_v1.title_y)][['title_x', 'title_y']])
+                           [pd.notnull(movietests_widedf_v1.title_y)][['title_x', 'title_y']].head(20))
 
-print('Movies where the years do not match:')
+print('QUALITY CHECK: Print 20 obs the years do not match:')
 print('Note: this lack of issues makes sense b/c years do not have capitalization diffs')
 print(movietests_widedf_v1[movietests_widedf_v1.year_x != movietests_widedf_v1.year_y]\
                            [pd.notnull(movietests_widedf_v1.year_x)]\
-                           [pd.notnull(movietests_widedf_v1.year_y)][['year_x', 'year_y']])
+                           [pd.notnull(movietests_widedf_v1.year_y)][['year_x', 'year_y']].head(20))
 
-print('Check if movies where titles did not match up correctly still have\
-      some data from both CSV sources (ex. cast_pct_women) and Bechdel (ex. score)')
+#Note: I would like to improve the check below for efficiency, but this shows at least that
+#there's some variation across movies.
+print('''QUALITY CHECK: Print 20 obs to check if movies where titles did not match up correctly still have
+some data from both CSV sources (ex. cast_pct_women) and Bechdel (ex. score)
+Note: This looks positive b/c all have Bechdel results, but this makes sense b/c right-join.''')
 print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.title_y]\
                            [pd.notnull(movietests_widedf_v1.title_x)]\
                            [pd.notnull(movietests_widedf_v1.title_y)]\
-                           [['cast_pct_women', 'score']])
+                           [['title_x', 'cast_pct_women', 'score']].head(20))
 
-#Note: I am confused why a few movies show up twice. Looks like this comes from
-#both year and capitalization diffs
-print('''Print 30 duplicate titles to see whether they have both CSV and Bechdel data.
-      Looks like there are some data issues with these movies, such Beneath, but others
-      are just different versions of the movie over time''')
-title_x_dups = movietests_widedf_v1.groupby('title_x') # number of people in cast data
-title_x_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(30)
+print('''DUPLICATE CHECK ON THE TITLE LEVEL:
+      Print 20 observations w/ duplicate titles to see whether they have both CSV and Bechdel data.
+      Note: Looks like there are some data issues in movies (eg. Beneath), but others
+      are just different versions of the movie over time (eg. Annie).''')
+t_dups = movietests_widedf_v1.groupby('title_x') # number of people in cast data
+t_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
 
+print('''DUPLICATE CHECK ON THE TITLE/YEAR LEVEL: 
+         Add year to the group_by and look at whether the data match across title/year duplicates.
+         Note: This is concerning because a few entries (Beneath, Emma) have differnet 
+         cast_pct_women values across the two entries.''')
+ty_dups = movietests_widedf_v1.groupby(['title_x', 'year_x']) # number of people in cast data
+ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
 
 #### STEP 5: DATA CLEANING ####
 
