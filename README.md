@@ -13,7 +13,7 @@ Everyone also has an individual branch containing the latest work that they sent
 
 ## Data  
 Data sources are listed below:  
-CSV files: https://www.kaggle.com/rounakbanik/the-movies-dataset 
+CSV files: https://www.kaggle.com/rounakbanik/the-movies-dataset  
 Web scraping: https://bechdeltest.com/  
 API work: https://developers.themoviedb.org/3/getting-started/introduction  
 Note: since the CSV files were too large to be uploaded to GitHub, they are saved on Gootle Drive here: https://drive.google.com/drive/folders/1YBz5KyT-jH_OTG0yfxhmN35hdNdsBP5V?usp=sharing.
