@@ -340,7 +340,9 @@ castcrew_widedf.columns = ['title', 'year', 'crew_pct_women', 'crew_n', \
 
 print('View the new wide dataset')
 viewdata(castcrew_widedf, 'This is the the merge of all Kaggle datasets on the movie level')
+
 ##### STEP 4: MERGE SINDU'S WORK W/ KAMANEEYA'S WORK #######
+##### CRUCIAL NOTE: THIS CURRENTLY USES A RIGHT JOIN, INSTEAD OF AN OUTER #####
 #Creating a merge key that uses all caps and concatenates years and titles w/o spaces.
 #The goals here are two-fold:
 #1) by making everything upper-case without spaces, this minimizes the probability
@@ -358,7 +360,6 @@ movietests_widedf_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'right', on
 
 print('View the new fully merged dataset')
 viewdata(movietests_widedf_v1, 'This merges Kaggle and web-scraped data.')
-
 
 #### QUALITY CHECKS ON MERGES
 #KR notes on next steps:
@@ -405,8 +406,9 @@ ty_dups = movietests_widedf_v1.groupby(['title_x', 'year_x']) # number of people
 ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
 
 #### STEP 5: DATA CLEANING ####
-
-#KR note as of 2.27.20: This is just a start to data cleaning. More is necessary.
+#KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
+    #Check that missing values were replaced correctly
+    #Learn to write code for "insufficient sample" w/o getting the SettingWithCopyWarning
 #Rename versions of title/year we want to keep
 movietests_widedf_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inplace = True)
 ###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate probs found in the quality checks above.
@@ -419,7 +421,74 @@ movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 = 'insufficient sample'
-movietests_widedf_v2.fillna('Missing')
-#KR note: next step is add check to confirm that these changes worked.
+movietests_widedf_v2.fillna('Missing', inplace = True)
+
+print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
+print(movietests_widedf_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
 viewdata(movietests_widedf_v2, 'This contains some cleaning after the final merge. It is currently the final dataset.')
+
+
+#### EXPLORATION OF FULL OUTER JOIN #####
+print('------------------------------------------------------------------------------')
+
+#RE-MERGE SINDU'S AND KAMANEEYA'S WORK USING AN OUTER JOIN. This will include all of Sindu's 
+#records, even when they do not have Bechdel data.
+movietests_outer_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'outer', on = 'mergekey')
+print('OUTER JOIN View how the dataset looks with an OUTER join')
+viewdata(movietests_outer_v1, 'This merges Kaggle and web-scraped data.')
+
+print('OUTER JOIN QUALITY CHECK: Print 20 obs where the titles do not match')
+print(movietests_outer_v1[movietests_outer_v1.title_x != movietests_outer_v1.title_y]\
+                           [pd.notnull(movietests_outer_v1.title_x)]\
+                           [pd.notnull(movietests_outer_v1.title_y)][['title_x', 'title_y']].head(20))
+
+print('OUTER JOIN QUALITY CHECK: Print 20 obs the years do not match:')
+print(movietests_outer_v1[movietests_outer_v1.year_x != movietests_outer_v1.year_y]\
+                           [pd.notnull(movietests_outer_v1.year_x)]\
+                           [pd.notnull(movietests_outer_v1.year_y)][['year_x', 'year_y']].head(20))
+
+#Note: I would like to improve the check below for efficiency, but this shows at least that
+#there's some variation across movies.
+print('''OUTER JOIN QUALITY CHECK: Print 20 obs to check if movies where titles did not match up correctly still have
+some data from both CSV sources (ex. cast_pct_women) and Bechdel (ex. score)
+Note: This should depart from the right-join above.''')
+print(movietests_outer_v1[movietests_outer_v1.title_x != movietests_outer_v1.title_y]\
+                           [pd.notnull(movietests_outer_v1.title_x)]\
+                           [pd.notnull(movietests_outer_v1.title_y)]\
+                           [['title_x', 'cast_pct_women', 'score']].head(20))
+
+print('OUTER JOIN DUPLICATE CHECK ON THE TITLE LEVEL:')
+t_dups2 = movietests_outer_v1.groupby('title_x') # number of people in cast data
+t_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
+
+print('OUTER JOIN DUPLICATE CHECK ON THE TITLE/YEAR LEVEL')
+ty_dups2 = movietests_outer_v1.groupby(['title_x', 'year_x']) # number of people in cast data
+ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
+
+#### STEP 5: DATA CLEANING ####
+#KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
+    #Check that missing values were replaced correctly
+    #Learn to write code for "insufficient sample" w/o getting the SettingWithCopyWarning
+#Rename versions of title/year we want to keep
+movietests_outer_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inplace = True)
+###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate obs found in the quality checks above.
+
+#Drop extra vars from merge
+movietests_outer_v2 = movietests_outer_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
+
+#Address the insufficient sample on certain movies
+movietests_outer_v2['cast_pct_women'][movietests_outer_v2['cast_n'] <= 10] \
+= 'insufficient sample'
+movietests_outer_v1['crew_pct_women'][movietests_outer_v2['crew_n'] <= 10] \
+= 'insufficient sample'
+movietests_outer_v2.fillna('Missing', inplace = True)
+
+print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
+print(movietests_outer_v2[['crew_pct_women', 'cast_pct_women']].head(20))
+
+viewdata(movietests_outer_v2, 'This contains some cleaning after the final OUTER JOIN merge.')
+
+#### WRITE FINAL OUTER JOIN DATA INTO CSVs #####
+movietests_outer_v2.to_csv('movietests_20200227.csv', index=False)
+
