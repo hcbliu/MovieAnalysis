@@ -9,7 +9,7 @@ The respository is structured as follows:
 -Readme (this doc): summarizes most important information about the project    
 -mastercode.py: this is our project's python code, combining different people's work  
 -docs folder: this contains important info about the project (essentially a subset of our shared google drive)    
--CSV of outcomes  
+-CSV of processed data  
   
 Everyone also has an individual branch containing the latest work that they sent via email as of 2.26.20.
 
