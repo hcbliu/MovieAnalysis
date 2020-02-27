@@ -1,19 +1,32 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Feb 22 12:55:07 2020
+##################
+# Movie Analysis #
+##################
+#Authors: Sinduja Sriskanda, Hui-Chen Betty Liu, Kamaneeya Kalaga, Kayla Reiman
 
-@author: ssriskanda
-"""
 
-#importing libary
+#Note: This is the first iteration of Kayla's work merging everyone's code
+#importing libary on 2.26.20
+
+####################
+# Import Libraries #
+####################
 import pandas as pd
+from bs4 import BeautifulSoup
 
+
+#######################
+# Read Data from CSVs #
+#######################
 #importing appropiate csv files into data frame
 OscarPicInfo = pd.read_csv('pictures.csv', engine = 'python')
 Oscarmetadata = pd.read_csv('movies_metadata.csv', engine = 'python')
 Oscarcredits = pd.read_csv('credits.csv', engine = 'python')
 
+
+
+#######################
+# Sindu work on CSVs  #
+#######################
 #PART 1: CREATION OF DATAFRAME FOR CAST
 
 #Since I am only trying to manipulate the cast columns, I decided to isolate it
@@ -27,7 +40,6 @@ cast = Oscarcredits[['cast', 'id']]
 #As mentioned before, I didn't know if the dataframe was 
 #stopping me from manipulating the data, so I decided to append it into a list
 #this was when I realized that they were strings...not dictionaries
-
 metacast = []
 for string in cast.index:
     entry = [cast['cast'][string], cast['id'][string]]
@@ -70,8 +82,6 @@ for i in range(len(metacast2)):
 #Created dataframe of all the actors who have won
 #I have been bumping into issues where this would not iterate through all of the dictionaries
 #So I put a try-block and just skip those that are not working
-#If you can find a way to maybe??? 
-#KR note: Added in gender.    
         
 pdfinalcast = []
 for i in range(len(finalcast)):
@@ -137,57 +147,10 @@ for i in range(len(finalcrew)):
 crewdf = pd.DataFrame(pdfinalcrew)
 crewdf.columns = ['name', 'id', 'department', 'job', 'gender'] 
 
-#Part 3: Collapse data to the movie level (aka transform from long to wide)
 
-        
-#Remove rows w/ missing data
-castdf = castdf[castdf['gender'] != 0]
-crewdf = crewdf[crewdf['gender'] != 0]
-
-
-#Create new gender field that's a binary for whether somebody is a woman
-def newgender(gender):
-    if gender == 2:
-        woman = 0
-    elif gender == 1:
-        woman = 1
-    elif gender == 0:
-        woman = 'NaN'
-    return woman
-        
-castdf['woman'] = castdf['gender'].apply(newgender)
-crewdf['woman'] = crewdf['gender'].apply(newgender)
-
-#Check that woman and gender line up correctly by looking at a few obs
-castdf.head(15)
-crewdf.head(15)
-
-#Create 4 different series that will ultimately comprise our dataset
-castwide = pd.DataFrame(castdf.groupby('id')["woman"].mean()) #% women in cast
-crewwide = pd.DataFrame(crewdf.groupby('id')["woman"].mean())
-castnum = pd.DataFrame(castdf.groupby('id').size()) # number of people in cast
-crewnum = pd.DataFrame(crewdf.groupby('id').size())
-
-######TITLES########
-#Create a series just for titles and make it work like the other dataframes
-titlesv1 = pd.DataFrame( {'title': Oscarmetadata["original_title"], \
-                          'id':Oscarmetadata["id"], 'date':Oscarmetadata["release_date"]})
-titlesv2 = titlesv1.set_index('id')
-titlesv3 = titlesv2.fillna('0000')
-titlesv3["year"] = titlesv3.date.apply(lambda x: x[:4])
-titlesv4 = titlesv3[["title", "year"]]
-titlesv4.head()
-
-##### MERGE #######
-#Merge all 4 columns + titles
-wide_v1 = titlesv4.merge(crewwide,on='id',how ='outer').\
-merge(crewnum,on = 'id',how ='outer').\
-merge(castwide,on='id',how ='outer').\
-merge(castnum,on='id',how ='outer')
-
-wide_v1.columns = ['title', 'year', 'crew_women', 'crew_ppl', 'cast_women', 'cast_ppl']
-wide_v1.head()
-
+##############################
+# Kamaneeya work on scraping #
+##############################
 #### BECHDEL TEST WORK #####
 '''
 Author:  Kamaneeya Kalaga
@@ -241,18 +204,79 @@ for yr in years:
                 ,ignore_index = True)
 
 #Set up titles that will have no differences in spaacing or capitalization
+    
+#######################
+# Kayla work on merge #
+#######################
+
+#Part 3: Collapse data to the movie level (aka transform from long to wide) 
+#Remove rows w/ missing gender data b/c we don't have a way of replacing it
+castdf = castdf[castdf['gender'] != 0]
+crewdf = crewdf[crewdf['gender'] != 0]
+
+#Create new gender field that's a binary for whether somebody is a woman
+def newgender(gender):
+    if gender == 2:
+        woman = 0
+    elif gender == 1:
+        woman = 1
+    elif gender == 0:
+        woman = 'NaN'
+    return woman
         
-#Note: for now using right join so that can see how Bechdel matches
+castdf['woman'] = castdf['gender'].apply(newgender)
+crewdf['woman'] = crewdf['gender'].apply(newgender)
+
+#Check that woman and gender line up correctly by looking at a few obs
+castdf.head(15)
+crewdf.head(15)
+
+#Create 4 different series that will ultimately contribute to our DataFrame
+#In addition to checking on gender, checking on sample size for each movie. 
+#Some of these casts/crews are very small, even for large movies, so the data 
+#are likely incomplete.
+castwide = pd.DataFrame(castdf.groupby('id')["woman"].mean()) #% women in cast
+crewwide = pd.DataFrame(crewdf.groupby('id')["woman"].mean())
+castnum = pd.DataFrame(castdf.groupby('id').size()) # number of people in cast data
+crewnum = pd.DataFrame(crewdf.groupby('id').size())
+
+#### READ AND PROCESS THE MOVIE TITLES FROM CSV ####
+#Create a series just for titles/dates and make it work like the other dataframes
+#Since the index here was a string, I updated Sindu's work to also have the ID field be strings
+titlesv1 = pd.DataFrame( {'title': Oscarmetadata["original_title"], \
+                          'id':Oscarmetadata["id"], 'date':Oscarmetadata["release_date"]})
+titlesv2 = titlesv1.set_index('id')
+titlesv3 = titlesv2.fillna('0000')
+titlesv3["year"] = titlesv3.date.apply(lambda x: x[:4])
+titlesv4 = titlesv3[["title", "year"]]
+titlesv4.head()
+
+##### MERGE #######
+#Merge all columns on cast/crew gender using the id field. Note that these datasets
+#all have the same ID field because they are from here:
+#https://www.kaggle.com/rounakbanik/the-movies-dataset
+wide_v1 = titlesv4.merge(crewwide,on='id',how ='outer').\
+merge(crewnum,on = 'id',how ='outer').\
+merge(castwide,on='id',how ='outer').\
+merge(castnum,on='id',how ='outer')
+
+#Re-name the columns after processing. I am using all lower case for convenience
+wide_v1.columns = ['title', 'year', 'crew_women', 'crew_ppl', 'cast_women', 'cast_ppl']
+wide_v1.head()
+    
+#Merge the gender fields above (in wide_v1) with the titles and bechdel datasets
+#Note: for now using right join so that can see how Bechdel matches.
+#However, should ultimately use outer join.
 wide_v1["mergekey"] = wide_v1['title'].apply(lambda x: x.upper()).\
 apply(lambda y: y.replace(' ', '')) + wide_v1.year
 bechdel_test["mergekey"] = bechdel_test['title'].apply(lambda x: x.upper()).\
 apply(lambda y: y.replace(' ', ''))+ bechdel_test.Year
 multitest_v1 = pd.merge(wide_v1, bechdel_test, how = 'right', on = 'mergekey')
+#Note: I am confused why a few movies show up twice.
 
 #### DATA CLEANING ####
 #Address the insufficient sample on certain movies
 multitest_v2 = multitest_v1.drop(['mergekey', 'title_x', 'Title', 'Score', 'Description', 'Year'], axis=1)  
 multitest_v2['cast_women'][multitest_v2['cast_ppl'] <= 10] = 'insufficient sample'
 multitest_v2['crew_women'][multitest_v2['crew_ppl'] <= 10] = 'insufficient sample'
-
 multitest_v2.fillna('Missing')

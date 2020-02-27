@@ -8,3 +8,10 @@ The respository is structured as follows:
 -Readme (this doc): summarizes most important information about the project  
 -mastercode.py: this is our project's python code  
 -additional files and folders containing data (for example Oscar_data)
+
+Data sources are listed below:
+CSV files: https://www.kaggle.com/rounakbanik/the-movies-dataset  
+Web scraping: https://bechdeltest.com/  
+API work: https://developers.themoviedb.org/3/getting-started/introduction
+
+Everyone also has an individual branch where I uploaded the latest work that they sent via email as of 2.26.20.
