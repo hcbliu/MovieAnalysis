@@ -385,17 +385,18 @@ print('''Print 30 duplicate titles to see whether they have both CSV and Bechdel
 title_x_dups = movietests_widedf_v1.groupby('title_x') # number of people in cast data
 title_x_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(30)
 
-###NEXT STEP: DEAL WITH THESE DUPLICATES. KR can do this, but it is not done yet.
 
 #### STEP 5: DATA CLEANING ####
 
 #KR note as of 2.27.20: This is just a start to data cleaning. More is necessary.
-movietests_widedf_v2 = movietests_widedf_v1.drop(['mergekey', 'title_x','year_y'], axis=1)
+#Rename versions of title/year we want to keep
+movietests_widedf_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inplace = True)
+###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate probs found in the quality checks above.
 
-movietests_widedf_v1.rename({'title_x' : 'title', 'year_x':'year'}, inplace = True)
+#Drop extra vars from merge
+movietests_widedf_v2 = movietests_widedf_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
 
 #Address the insufficient sample on certain movies
-
 movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
@@ -403,4 +404,4 @@ movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 movietests_widedf_v2.fillna('Missing')
 #KR note: next step is add check to confirm that these changes worked.
 
-viewdata(movietests_widedf_v2, 'This contains some cleaning after the final merge. It is currently the final dataset')
+viewdata(movietests_widedf_v2, 'This contains some cleaning after the final merge. It is currently the final dataset.')
