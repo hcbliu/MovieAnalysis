@@ -8,7 +8,7 @@ Our goal is to create an app that displays information about movies. For example
 The respository is structured as follows:  
 -Readme (this doc): summarizes most important information about the project    
 -mastercode.py: this is our project's python code, combining different people's work  
--docs folder: this contains misc. info about the project (some of which are also in our shared google drive)  
+-docs folder: this contains misc. info about the project (all of which is also in our shared google drive)  
   
 Everyone also has an individual branch containing the latest work that they sent via email as of 2.26.20.
 
