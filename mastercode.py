@@ -51,7 +51,7 @@ def viewdata(dsname, desc = 'add description here'):
         print('\t', dsname.columns[i], end ='\n')
     print('  2. Shape of dataframe:', dsname.shape)
     print('\n  3. Use head() to see 5 Rows')
-    print(dsname.head()) 
+    print(dsname.head(), end = '\n') 
     
 viewdata(moviemetadata, 'This is an original CSV from kaggle.')
 viewdata(moviecredits, 'This is an original CSV from kaggle.')
@@ -205,13 +205,12 @@ and the description of the score for each year and creates a pandas dataframe
 with the information.
 '''
 
-# Years of data needed --> can be edited
-#KR updated to include whole range rather than just being most recent 3 years. 
-#Next step is figure out which years are actually on the website, in order to be efficient.
-years = [str(x) for x in list(range(1980, 2020))]
+#Create list of years needed
+#During 2.27 meeting, we decided to limit to 30-yr range
+years = [str(x) for x in list(range(1990, 2020))]
 
 # Create Empty dataset to fill the data
-bechdel_test = pd.DataFrame(columns = ["year", "title", "score", "description"])
+bechdel_test = pd.DataFrame(columns = ["year", "title", "bechdel_score", "bechdel_desc"])
 
 # Loop through each year to get the data
 for yr in years:
@@ -234,12 +233,17 @@ for yr in years:
         desc = info[0].find("img")["title"]
 
         #Append to the dataframe
-        bechdel_test = bechdel_test.append({"year":yr, "title":name, "score": score[2], "description": desc[1:-1]}
+        bechdel_test = bechdel_test.append({"year":int(yr), "title":name, \
+                                            "bechdel_score": score[2], \
+                                            "bechdel_desc": desc[1:-1]}
                 ,ignore_index = True)
 
 #Set up titles that will have no differences in spaacing or capitalization
 #KR addition: view the dataset
 viewdata(bechdel_test, 'This web-scrabed dataframe shows how movies fared on the Bechdel test.')
+
+#Send the bechdel test scraping to a CSV so we don't have to rescrape every time
+bechdel_test.to_csv('bechdel_test_20200227.csv', index=False)
 
 #######################
 # Kayla work on merge #
@@ -314,8 +318,8 @@ titlesv2 = titlesv1.set_index('id')
 #Fill date field so that next operation (creating a year variable) works
 titlesv3 = titlesv2.fillna('0000')
 
-#Create a year field
-titlesv3["year"] = titlesv3.date.apply(lambda x: x[:4])
+#Create a year field, and make it integer
+titlesv3["year"] = titlesv3.date.apply(lambda x: int(x[:4]))
 
 #Remove the release date field to keep the dataset limited to only relevant info
 titlesv4 = titlesv3[["title", "year"]]
@@ -329,37 +333,48 @@ viewdata(titlesv4, 'This is the processed version of the moviemetadata from kagg
 #https://www.kaggle.com/rounakbanik/the-movies-dataset.
 #Note: These are outer joins b/c I want to keep all these titles, whether or not
 #they have cast/crew data available.
-castcrew_widedf = titlesv4.merge(crewwide,on='id',how ='outer').\
+castcrew_widedf_v1 = titlesv4.merge(crewwide,on='id',how ='outer').\
 merge(crewnum,on = 'id',how ='outer').\
 merge(castwide,on='id',how ='outer').\
 merge(castnum,on='id',how ='outer')
 
 #Re-name the columns after processing. Note: I am using all lower case for consistency
-castcrew_widedf.columns = ['title', 'year', 'crew_pct_women', 'crew_n', \
+castcrew_widedf_v1.columns = ['title', 'year', 'crew_pct_women', 'crew_n', \
                            'cast_pct_women', 'cast_n']
 
-print('View the new wide dataset')
-viewdata(castcrew_widedf, 'This is the the merge of all Kaggle datasets on the movie level')
+print('View the new wide Kaggle (i.e. cast/crew/title) dataset')
+viewdata(castcrew_widedf_v1, 'This is the the merge of all Kaggle datasets on the movie level')
 
-##### STEP 4: MERGE SINDU'S WORK W/ KAMANEEYA'S WORK #######
-##### CRUCIAL NOTE: THIS CURRENTLY USES A RIGHT JOIN, INSTEAD OF AN OUTER #####
+#Limit kaggle dataset to just movies between 1990 and 2020.
+castcrew_widedf_v2 = castcrew_widedf_v1[castcrew_widedf_v1.year >= 1990]
+
 #Creating a merge key that uses all caps and concatenates years and titles w/o spaces.
 #The goals here are two-fold:
 #1) by making everything upper-case without spaces, this minimizes the probability
 #That the same movie could be expressed slightly differently across databases
 #2) by adding the year, this separates remakes (eg. Freaky Friday, Little Women...)
-castcrew_widedf["mergekey"] = castcrew_widedf['title'].apply(lambda x: x.upper()).\
-apply(lambda y: y.replace(' ', '')) + castcrew_widedf.year
+castcrew_widedf_v2["mergekey"] = castcrew_widedf_v2['title'].apply(lambda x: x.upper()).\
+apply(lambda y: y.replace(' ', '')) + castcrew_widedf_v2.year.astype(str)
+
+#View dataset
+viewdata(castcrew_widedf_v2, '''This is the Kaggle dataset subset from 1990 to 
+         present and with a new field called mergekey that combines title and year.''')
+
+
+##### STEP 4: MERGE SINDU'S WORK W/ KAMANEEYA'S WORK #######
+##### CRUCIAL NOTE: THIS CURRENTLY USES A RIGHT JOIN, INSTEAD OF AN OUTER #####
+
+#Create same type of merge key as above
 bechdel_test["mergekey"] = bechdel_test['title'].apply(lambda x: x.upper()).\
-apply(lambda y: y.replace(' ', ''))+ bechdel_test.year
+apply(lambda y: y.replace(' ', ''))+ bechdel_test['year'].astype(str)
 
 #Merge the gender fields above (in castcrew_widedf) with the titles and bechdel datasets
-#Note: for now using right join so that can see how Bechdel matches.
-#However, should ultimately use outer join.
-movietests_widedf_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'right', on = 'mergekey')
+#Note: using left join so that we don't receive Bechdel data unless there is movie data.
+movietests_widedf_v1 = pd.merge(castcrew_widedf_v2, bechdel_test, how = 'left', on = 'mergekey')
 
-print('View the new fully merged dataset')
-viewdata(movietests_widedf_v1, 'This merges Kaggle and web-scraped data.')
+print('View the new fully left-joined dataset')
+viewdata(movietests_widedf_v1, '''This merges Kaggle and web-scraped data. 
+         It is left-joined so that it keeps all Kaggle data, but not all Bechdel data.''')
 
 #### QUALITY CHECKS ON MERGES
 #KR notes on next steps:
@@ -370,51 +385,57 @@ viewdata(movietests_widedf_v1, 'This merges Kaggle and web-scraped data.')
 #Confirm the current warning isn't causing problems:
     #"UserWarning: Boolean Series key will be reindexed to match DataFrame index."
 
-print('QUALITY CHECK: Print 20 obs where the titles do not match:\nNote: looks like capitalization diffs:')
+
+#Note: This currently returns a warning, so will ideally fix this.
+print('\nQUALITY CHECK: Print 20 obs where the titles do not match:\nNote: looks like capitalization diffs:')
 print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.title_y]\
                            [pd.notnull(movietests_widedf_v1.title_x)]\
                            [pd.notnull(movietests_widedf_v1.title_y)][['title_x', 'title_y']].head(20))
 
-print('QUALITY CHECK: Print 20 obs the years do not match:')
+print('QUALITY CHECK: Print 20 obs where the years do not match:')
 print('Note: this lack of issues makes sense b/c years do not have capitalization diffs')
 print(movietests_widedf_v1[movietests_widedf_v1.year_x != movietests_widedf_v1.year_y]\
                            [pd.notnull(movietests_widedf_v1.year_x)]\
                            [pd.notnull(movietests_widedf_v1.year_y)][['year_x', 'year_y']].head(20))
 
-#Note: I would like to improve the check below for efficiency, but this shows at least that
-#there's some variation across movies.
-print('''QUALITY CHECK: Print 20 obs to check if movies where titles did not match up correctly still have
-some data from both CSV sources (ex. cast_pct_women) and Bechdel (ex. score)
-Note: This looks positive b/c all have Bechdel results, but this makes sense b/c right-join.''')
-print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.title_y]\
-                           [pd.notnull(movietests_widedf_v1.title_x)]\
-                           [pd.notnull(movietests_widedf_v1.title_y)]\
-                           [['title_x', 'cast_pct_women', 'score']].head(20))
-
 print('''DUPLICATE CHECK ON THE TITLE LEVEL:
       Print 20 observations w/ duplicate titles to see whether they have both CSV and Bechdel data.
-      Note: Looks like there are some data issues in movies (eg. Beneath), but others
-      are just different versions of the movie over time (eg. Annie).''')
+      Note: most of these (except 20,000 Leagues) appear to differ by year.
+      This is good, but more investigation is needed.''')
 t_dups = movietests_widedf_v1.groupby('title_x') # number of people in cast data
-t_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
+t_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
+[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
+
 
 print('''DUPLICATE CHECK ON THE TITLE/YEAR LEVEL: 
          Add year to the group_by and look at whether the data match across title/year duplicates.
-         Note: This is concerning because a few entries (Beneath, Emma) have differnet 
+         Note: This is concerning because a few entries (ex. Beneath) have differnet 
          cast_pct_women values across the two entries.''')
 ty_dups = movietests_widedf_v1.groupby(['title_x', 'year_x']) # number of people in cast data
-ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
+ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
+[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
+
+print('''DUPLICATE CHECK ON THE TITLE/YEAR LEVEL - VERSION 2:
+      Re-run the check above limiting to obs with non-missing bechdel_score
+      Note: it is concerning that some movies (ex. Beneath, Emma) have different 
+      cast_pct_women values.''')
+ty_dups2 = movietests_widedf_v1[(pd.isnull(movietests_widedf_v1.bechdel_score)==0)]\
+         .groupby(['title_x', 'year_x']) # number of people in cast data
+ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
+        [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
 
 #### STEP 5: DATA CLEANING ####
 #KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
     #Check that missing values were replaced correctly
     #Learn to write code for "insufficient sample" w/o getting the SettingWithCopyWarning
 #Rename versions of title/year we want to keep
-movietests_widedf_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inplace = True)
+movietests_widedf_v2 = movietests_widedf_v1.rename({'title_x' : 'title', \
+                                                    'year_x':'year'}, axis = 1)
+            
 ###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate probs found in the quality checks above.
 
 #Drop extra vars from merge
-movietests_widedf_v2 = movietests_widedf_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
+movietests_widedf_v2.drop(['mergekey', 'title_y','year_y'], axis=1, inplace = True)
 
 #Address the insufficient sample on certain movies
 movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
@@ -426,69 +447,8 @@ movietests_widedf_v2.fillna('Missing', inplace = True)
 print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
 print(movietests_widedf_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
-viewdata(movietests_widedf_v2, 'This contains some cleaning after the final merge. It is currently the final dataset.')
+viewdata(movietests_widedf_v2, '''This contains some cleaning after the final merge. 
+         It is currently the final dataset.''')
 
-
-#### EXPLORATION OF FULL OUTER JOIN #####
-print('------------------------------------------------------------------------------')
-
-#RE-MERGE SINDU'S AND KAMANEEYA'S WORK USING AN OUTER JOIN. This will include all of Sindu's 
-#records, even when they do not have Bechdel data.
-movietests_outer_v1 = pd.merge(castcrew_widedf, bechdel_test, how = 'outer', on = 'mergekey')
-print('OUTER JOIN View how the dataset looks with an OUTER join')
-viewdata(movietests_outer_v1, 'This merges Kaggle and web-scraped data.')
-
-print('OUTER JOIN QUALITY CHECK: Print 20 obs where the titles do not match')
-print(movietests_outer_v1[movietests_outer_v1.title_x != movietests_outer_v1.title_y]\
-                           [pd.notnull(movietests_outer_v1.title_x)]\
-                           [pd.notnull(movietests_outer_v1.title_y)][['title_x', 'title_y']].head(20))
-
-print('OUTER JOIN QUALITY CHECK: Print 20 obs the years do not match:')
-print(movietests_outer_v1[movietests_outer_v1.year_x != movietests_outer_v1.year_y]\
-                           [pd.notnull(movietests_outer_v1.year_x)]\
-                           [pd.notnull(movietests_outer_v1.year_y)][['year_x', 'year_y']].head(20))
-
-#Note: I would like to improve the check below for efficiency, but this shows at least that
-#there's some variation across movies.
-print('''OUTER JOIN QUALITY CHECK: Print 20 obs to check if movies where titles did not match up correctly still have
-some data from both CSV sources (ex. cast_pct_women) and Bechdel (ex. score)
-Note: This should depart from the right-join above.''')
-print(movietests_outer_v1[movietests_outer_v1.title_x != movietests_outer_v1.title_y]\
-                           [pd.notnull(movietests_outer_v1.title_x)]\
-                           [pd.notnull(movietests_outer_v1.title_y)]\
-                           [['title_x', 'cast_pct_women', 'score']].head(20))
-
-print('OUTER JOIN DUPLICATE CHECK ON THE TITLE LEVEL:')
-t_dups2 = movietests_outer_v1.groupby('title_x') # number of people in cast data
-t_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
-
-print('OUTER JOIN DUPLICATE CHECK ON THE TITLE/YEAR LEVEL')
-ty_dups2 = movietests_outer_v1.groupby(['title_x', 'year_x']) # number of people in cast data
-ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')[['title_x','year_x', 'cast_pct_women', 'score']].head(20)
-
-#### STEP 5: DATA CLEANING ####
-#KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
-    #Check that missing values were replaced correctly
-    #Learn to write code for "insufficient sample" w/o getting the SettingWithCopyWarning
-#Rename versions of title/year we want to keep
-movietests_outer_v1.rename({'title_x' : 'title', 'year_x':'year'}, axis = 1, inplace = True)
-###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate obs found in the quality checks above.
-
-#Drop extra vars from merge
-movietests_outer_v2 = movietests_outer_v1.drop(['mergekey', 'title_y','year_y'], axis=1)
-
-#Address the insufficient sample on certain movies
-movietests_outer_v2['cast_pct_women'][movietests_outer_v2['cast_n'] <= 10] \
-= 'insufficient sample'
-movietests_outer_v1['crew_pct_women'][movietests_outer_v2['crew_n'] <= 10] \
-= 'insufficient sample'
-movietests_outer_v2.fillna('Missing', inplace = True)
-
-print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
-print(movietests_outer_v2[['crew_pct_women', 'cast_pct_women']].head(20))
-
-viewdata(movietests_outer_v2, 'This contains some cleaning after the final OUTER JOIN merge.')
-
-#### WRITE FINAL OUTER JOIN DATA INTO CSVs #####
-movietests_outer_v2.to_csv('movietests_20200227.csv', index=False)
-
+#### WRITE FINAL DATASET INTO CSV #####
+movietests_widedf_v2.to_csv('movietests_20200227_v2.csv', index=False)
