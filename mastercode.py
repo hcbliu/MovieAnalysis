@@ -22,6 +22,7 @@
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
+import datetime #using this to name datasets when they're created
 
 #################################
 # Read Movie Datasets from CSVs #
@@ -43,18 +44,22 @@ moviecredits = pd.read_csv('credits.csv', engine = 'python')
 #Returned: nothing -- this is just for printing
 def viewdata(dsname, desc = 'add description here'):
     name =[x for x in globals() if globals()[x] is dsname][0]
+    varlist = [name + '["' + dsname.columns[i] + '"]'for i in range(len(dsname.columns))]
     print('------------------------------------------------------')
-    print('THREE-PART OVERVIEW OF', name.upper())
-    print('Description:', desc)
-    print('  1. Columns in', name)
+    print('THREE-PART OVERVIEW OF THE DATASET CALLED %s:' %(name.upper()))
+    print('Description: %s is %s' %(name, desc))
+    print('\n  1. Columns in %s:' %(name))
+    print(('%-30s %-20s %-30s') %('VAR NAME', 'TYPE OF COLUMN', 'TYPE OF FIRST CELL'))
     for i in range(len(dsname.columns)):
-        print('\t', dsname.columns[i], end ='\n')
-    print('  2. Shape of dataframe:', dsname.shape)
-    print('\n  3. Use head() to see 5 Rows')
+        print(('%-30s %-20s %-30s') %(dsname.columns[i], dsname.dtypes[i], \
+              type(eval(varlist[i])[0])), end ='\n')
+    print('\n   2. Shape of dataframe:', dsname.shape)
+    print('\n   3. Use head() to see 5 Rows')
     print(dsname.head(), end = '\n') 
     
-viewdata(moviemetadata, 'This is an original CSV from kaggle.')
-viewdata(moviecredits, 'This is an original CSV from kaggle.')
+    
+viewdata(moviemetadata, 'an original CSV from kaggle called movies_metadata.')
+viewdata(moviecredits, 'an original CSV from kaggle called credits.csv.')
 
 #######################
 # Sindu work on CSVs  #
@@ -138,7 +143,7 @@ castdf = pd.DataFrame(pdfinalcast)
 castdf.columns = ['name', 'id', 'gender']
 
 #KR addition: view the dataset
-viewdata(castdf, 'This is half of the processed form of moviecredits from Kaggle.')
+viewdata(castdf, 'half of the processed form of moviecredits from Kaggle.')
 
 #PART 2: CREATION OF DATAFRAME FOR CREW
 #(it's basically the same stuff I was doing before)
@@ -189,7 +194,7 @@ crewdf = pd.DataFrame(pdfinalcrew)
 crewdf.columns = ['name', 'id', 'department', 'job', 'gender']
 
 #KR addition: view the dataset
-viewdata(crewdf, 'This is half of the processed form of moviecredits from Kaggle.')
+viewdata(crewdf, 'the crew half of the processed form of moviecredits from Kaggle.')
 
 ##############################
 # Kamaneeya work on scraping #
@@ -240,7 +245,7 @@ for yr in years:
 
 #Set up titles that will have no differences in spaacing or capitalization
 #KR addition: view the dataset
-viewdata(bechdel_test, 'This web-scrabed dataframe shows how movies fared on the Bechdel test.')
+viewdata(bechdel_test, 'a web-scrabed dataframe that shows how movies fared on the Bechdel test.')
 
 #Send the bechdel test scraping to a CSV so we don't have to rescrape every time
 bechdel_test.to_csv('bechdel_test_20200227.csv', index=False)
@@ -343,7 +348,7 @@ castcrew_widedf_v1.columns = ['title', 'year', 'crew_pct_women', 'crew_n', \
                            'cast_pct_women', 'cast_n']
 
 print('View the new wide Kaggle (i.e. cast/crew/title) dataset')
-viewdata(castcrew_widedf_v1, 'This is the the merge of all Kaggle datasets on the movie level')
+viewdata(castcrew_widedf_v1, 'the merge of all Kaggle datasets on the movie level')
 
 #Limit kaggle dataset to just movies between 1990 and 2020.
 castcrew_widedf_v2 = castcrew_widedf_v1[castcrew_widedf_v1.year >= 1990]
@@ -357,7 +362,7 @@ castcrew_widedf_v2["mergekey"] = castcrew_widedf_v2['title'].apply(lambda x: x.u
 apply(lambda y: y.replace(' ', '')) + castcrew_widedf_v2.year.astype(str)
 
 #View dataset
-viewdata(castcrew_widedf_v2, '''This is the Kaggle dataset subset from 1990 to 
+viewdata(castcrew_widedf_v2, '''the Kaggle dataset subset from 1990 to 
          present and with a new field called mergekey that combines title and year.''')
 
 
@@ -373,7 +378,7 @@ apply(lambda y: y.replace(' ', ''))+ bechdel_test['year'].astype(str)
 movietests_widedf_v1 = pd.merge(castcrew_widedf_v2, bechdel_test, how = 'left', on = 'mergekey')
 
 print('View the new fully left-joined dataset')
-viewdata(movietests_widedf_v1, '''This merges Kaggle and web-scraped data. 
+viewdata(movietests_widedf_v1, '''the dataset that merges Kaggle and web-scraped data. 
          It is left-joined so that it keeps all Kaggle data, but not all Bechdel data.''')
 
 #### QUALITY CHECKS ON MERGES
@@ -392,13 +397,13 @@ print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.
                            [pd.notnull(movietests_widedf_v1.title_x)]\
                            [pd.notnull(movietests_widedf_v1.title_y)][['title_x', 'title_y']].head(20))
 
-print('QUALITY CHECK: Print 20 obs where the years do not match:')
+print('\nQUALITY CHECK: Print 20 obs where the years do not match:')
 print('Note: this lack of issues makes sense b/c years do not have capitalization diffs')
 print(movietests_widedf_v1[movietests_widedf_v1.year_x != movietests_widedf_v1.year_y]\
                            [pd.notnull(movietests_widedf_v1.year_x)]\
                            [pd.notnull(movietests_widedf_v1.year_y)][['year_x', 'year_y']].head(20))
 
-print('''DUPLICATE CHECK ON THE TITLE LEVEL:
+print('''\nDUPLICATE CHECK ON THE TITLE LEVEL:
       Print 20 observations w/ duplicate titles to see whether they have both CSV and Bechdel data.
       Note: most of these (except 20,000 Leagues) appear to differ by year.
       This is good, but more investigation is needed.''')
@@ -407,22 +412,22 @@ t_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
 [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
 
 
-print('''DUPLICATE CHECK ON THE TITLE/YEAR LEVEL: 
+print('''\nDUPLICATE CHECK ON THE TITLE/YEAR LEVEL: 
          Add year to the group_by and look at whether the data match across title/year duplicates.
          Note: This is concerning because a few entries (ex. Beneath) have differnet 
          cast_pct_women values across the two entries.''')
 ty_dups = movietests_widedf_v1.groupby(['title_x', 'year_x']) # number of people in cast data
-ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
-[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
+print(ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
+[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20))
 
-print('''DUPLICATE CHECK ON THE TITLE/YEAR LEVEL - VERSION 2:
+print('''\nDUPLICATE CHECK ON THE TITLE/YEAR LEVEL - VERSION 2:
       Re-run the check above limiting to obs with non-missing bechdel_score
       Note: it is concerning that some movies (ex. Beneath, Emma) have different 
       cast_pct_women values.''')
 ty_dups2 = movietests_widedf_v1[(pd.isnull(movietests_widedf_v1.bechdel_score)==0)]\
          .groupby(['title_x', 'year_x']) # number of people in cast data
-ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
-        [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
+print(ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
+        [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20))
 
 #### STEP 5: DATA CLEANING ####
 #KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
@@ -442,13 +447,19 @@ movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 = 'insufficient sample'
-movietests_widedf_v2.fillna('Missing', inplace = True)
 
 print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
 print(movietests_widedf_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
-viewdata(movietests_widedf_v2, '''This contains some cleaning after the final merge. 
+viewdata(movietests_widedf_v2, '''contains some cleaning after the final merge. 
          It is currently the final dataset.''')
 
 #### WRITE FINAL DATASET INTO CSV #####
-movietests_widedf_v2.to_csv('movietests_20200227_v2.csv', index=False)
+#create CSV name w/ today's date
+csvname = 'mtests_' + str(datetime.date.today()).replace('-', '') + '.csv'
+movietests_widedf_v2.to_csv(csvname, index=False)
+
+#Create CSV named w/ "current" that can just be repeatedly replaced. 
+movietests_widedf_v2.to_csv('mtests_current.csv', index=False)
+
+
