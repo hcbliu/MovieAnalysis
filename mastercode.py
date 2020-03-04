@@ -1,28 +1,29 @@
 ##################
 # Movie Analysis #
 ##################
-#Authors: Sinduja Sriskanda, Hui-Chen Betty Liu, Kamaneeya Kalaga, Kayla Reiman
+'''
+Project Authors: 
+    -Sinduja Sriskanda 
+    -Hui-Chen Betty Liu 
+    -Kamaneeya Kalaga
+    -Kayla Reiman
 
-#Note: As of 2.27.20, this file contains code by Sindu, Kayla, and Kamaneeya. 
-#The end product is a dataframe with movie titles, years, and results of 3 tests:
-    # %women cast
-    # %women crew
-    # Bechdel test
-#Note: Betty's API work has not yet been merged in.
-#The final dataset at this point is ccurrently alled movietests_widedf_v2. 
-#Although this name is a bit long, the thinking is as follows:
-    #movietests means that it's integrating all tests
-    #wide indicates that it's on the movie level (instead of movie/person)
-    #df indicates it's a pandas dataframe
-    #v2 indicates it's had some cleaning
-    
+
+Overview: This file contains code by Sindu, Kayla, and Kamaneeya. The end 
+product is a CSV (called movietests_20200227_v2.csv) with movie titles, years, 
+and results of 3 tests:
+     % women in the cast (along w/ sample size)
+     % women in the crew  (along w/ sample size)
+     Bechdel test
+
+Betty's Python code then uses this CSV to add a synopsis column.
+'''
 ####################
 # Import Libraries #
 ####################
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
-import datetime #using this to name datasets when they're created
 
 #################################
 # Read Movie Datasets from CSVs #
@@ -367,7 +368,6 @@ viewdata(castcrew_widedf_v2, '''the Kaggle dataset subset from 1990 to
 
 
 ##### STEP 4: MERGE SINDU'S WORK W/ KAMANEEYA'S WORK #######
-##### CRUCIAL NOTE: THIS CURRENTLY USES A RIGHT JOIN, INSTEAD OF AN OUTER #####
 
 #Create same type of merge key as above
 bechdel_test["mergekey"] = bechdel_test['title'].apply(lambda x: x.upper()).\
@@ -382,16 +382,6 @@ viewdata(movietests_widedf_v1, '''the dataset that merges Kaggle and web-scraped
          It is left-joined so that it keeps all Kaggle data, but not all Bechdel data.''')
 
 #### QUALITY CHECKS ON MERGES
-#KR notes on next steps:
-#Ideally use 20 randomly select obs, rather than using head()
-#Run further checks on partial duplicates to check 
-    #a) which data are accurate (particularly in Beneath)
-    #b) which obs should we delete?
-#Confirm the current warning isn't causing problems:
-    #"UserWarning: Boolean Series key will be reindexed to match DataFrame index."
-
-
-#Note: This currently returns a warning, so will ideally fix this.
 print('\nQUALITY CHECK: Print 20 obs where the titles do not match:\nNote: looks like capitalization diffs:')
 print(movietests_widedf_v1[movietests_widedf_v1.title_x != movietests_widedf_v1.title_y]\
                            [pd.notnull(movietests_widedf_v1.title_x)]\
@@ -430,15 +420,10 @@ print(ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
         [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20))
 
 #### STEP 5: DATA CLEANING ####
-#KR note as of 2.27.20: This is just a start to data cleaning. Next steps include the following:
-    #Check that missing values were replaced correctly
-    #Learn to write code for "insufficient sample" w/o getting the SettingWithCopyWarning
 #Rename versions of title/year we want to keep
 movietests_widedf_v2 = movietests_widedf_v1.rename({'title_x' : 'title', \
                                                     'year_x':'year'}, axis = 1)
             
-###NEXT DATA CLEANING STEP TO ADD HERE: Remove duplicate probs found in the quality checks above.
-
 #Drop extra vars from merge
 movietests_widedf_v2.drop(['mergekey', 'title_y','year_y'], axis=1, inplace = True)
 
@@ -447,19 +432,15 @@ movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 = 'insufficient sample'
+movietests_widedf_v2 = movietests_widedf_v2.fillna('Missing')
 
 print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
 print(movietests_widedf_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
-viewdata(movietests_widedf_v2, '''contains some cleaning after the final merge. 
+viewdata(movietests_widedf_v2, '''contains some cleanig after the final merge. 
          It is currently the final dataset.''')
 
 #### WRITE FINAL DATASET INTO CSV #####
-#create CSV name w/ today's date
-csvname = 'mtests_' + str(datetime.date.today()).replace('-', '') + '.csv'
-movietests_widedf_v2.to_csv(csvname, index=False)
-
-#Create CSV named w/ "current" that can just be repeatedly replaced. 
-movietests_widedf_v2.to_csv('mtests_current.csv', index=False)
+movietests_widedf_v2.to_csv('movietests_20200227_v2.csv', index=False)
 
 
