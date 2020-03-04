@@ -23,6 +23,8 @@ def fetchMovie(movie):
         df.rename(columns={"title" : "Title", "release_date" : "Release Date", "overview" : "Synopsis"}, inplace=True)
         return df[['Title', 'Release Date', 'Synopsis']]
 
+#I ran into an API Runtime error while looping over the entire dataframe (around 30,000 rows). Pass bypass the issue, I got a second API key and ran this code in chunks.
+# By chunking I mean changing line 29 of the code (for line in movieDF.index:) to (for line in movieDF.index[:7500]:), (for line in movieDF.index[7500:15000]:), (for line in movieDF.index[1500:2250]:)
 
 for line in movieDF.index:
     movieYear = movieDF['year'].iloc[line] 
@@ -113,6 +115,7 @@ for line in movieDF.index:
 
 cleandMovieDF = movieDF[movieDF['synopsis'].notna()]
 
-cleandMovieDF.to_csv('cleanedMovieDataAPI.csv')
+# When I ran this part of the code, I changed the 'partN' part to 'part1', 'part2', 'part3', etc. to generate 7 different files.
+cleandMovieDF.to_csv('cleanedMovieDataAPIpartN.csv')
 
    
