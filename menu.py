@@ -5,29 +5,37 @@
 
 #Note: This code was written by Betty and adapted by Kamaneeya as of 2.27.20
 #Minor edits from Kayla on 2.28.20
+#Additional edits from Kayla on 3.3.20 as of 2pm
 
 
 #KR note: added this to the top b/c easier to update
 #Import libraries
 import pandas as pd
+import numpy as np #for plotting
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 #Read in CSV:     
-movie = pd.read_csv("cleanedMovieData_20200228_9am.csv") #Update this as needed
-
+movie = pd.read_csv("cleanedMovieDataFINAL.csv") #Version from Betty as of Feb 29, 2020, 10:38 PM
 
 #Troubleshooting option for programmer: view dataset
-
 #def viewdata(dsname, desc = 'add description here'):
 #    name =[x for x in globals() if globals()[x] is dsname][0]
+#    varlist = [name + '["' + dsname.columns[i] + '"]'for i in range(len(dsname.columns))]
 #    print('------------------------------------------------------')
-#    print('THREE-PART OVERVIEW OF DATASET: ', name.upper())
-#    print('Description:', desc)
-#    print('  1. Columns and data types in %s\n' %(name), dsname.dtypes)
-#    print('  2. Shape of dataframe:', dsname.shape)
-#    print('\n  3. Use head() to see 5 Rows')
+#    print('THREE-PART OVERVIEW OF THE DATASET CALLED %s:' %(name.upper()))
+#    print('Description: %s is %s' %(name, desc))
+#    print('\n  1. Columns in %s:' %(name))
+#    print(('%-20s %-20s %-30s') %('VAR NAME', 'TYPE OF COLUMN', 'TYPE OF FIRST CELL'))
+#    for i in range(len(dsname.columns)):
+#        print(('%-20s %-20s %-30s') %(dsname.columns[i], dsname.dtypes[i], \
+#              type(eval(varlist[i])[0])), end ='\n')
+#    print('   2. Shape of dataframe:', dsname.shape)
+#    print('   3. Use head() to see 5 Rows')
 #    print(dsname.head(), end = '\n') 
 #    
-#viewdata(movie, 'This is the data that will be used for the app.')
+#viewdata(movie, 'our main dataset.') 
 
 # main()
 # Parameters: none
@@ -40,7 +48,7 @@ movie = pd.read_csv("cleanedMovieData_20200228_9am.csv") #Update this as needed
 def main(): 
     validtitle = True
     while validtitle:
-        name = input("Please enter a movie name: ")
+        name = input("Please enter a movie name (or part of a movie name): ")
         c,name = searchmovie(name)
         if c >= 0:
             index = movie[movie['title'] == name].index[0]
@@ -73,7 +81,7 @@ def searchmovie(name):
     i=0
     namelist =[]
     tlist = [movie['title'][i] for i in range(len(movie))]       
-    print("Did you mean any of the following?")
+    print("\nIs your movie one of the following?")
     for t in tlist: 
         if re.search(name_re,t) != None:
             print(i,'-', t)
@@ -144,12 +152,22 @@ def tableFunctions(s,index):
             print("Percentage of women in the crew: ", displaypct(movie.iloc[index]['crew_pct_women']))
             print("Crew members in dataset: ", movie.iloc[index]['crew_n'])
             print("Percentage of women in the crew: ", displaypct(movie.iloc[index]['cast_pct_women']))
-            print("Cast members in dataset: ", movie.iloc[index]['cast_n'][0:2])
+            print("Cast members in dataset: ", movie.iloc[index]['cast_n'][0:2]) #this assumes no more than 99 cast members
             print('=============================') 
             s = menu()
         elif s == 3: 
             print("Summary statistics:")
             print('=====================')
+            plt.close() 
+            bechdel_nonmiss = movie.bechdel_score[movie.bechdel_score != 'Missing'].apply(lambda x: int(x))
+            n, bins, patches = plt.hist(bechdel_nonmiss, color = 'g')
+            #patches[int(score)].setfc('r') #KR note: why doesn't this work? It works in the example below!
+            plt.title('Hisogram of Test Scores from bechdeltest.org')
+            plt.xlabel('Score on Bechdel Test')
+            plt.ylabel('Number of movies')
+            plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+            plt.xticks(np.arange(4))
+            plt.show()
             print('=====================')
             s = menu()
         elif s == 4:
@@ -179,3 +197,26 @@ def tableFunctions(s,index):
 # Returns: basic information of the movie
 if __name__ == '__main__':
     main()
+    
+    
+#Testing Bechdel code
+
+#plt.close() 
+#bechdel_nonmiss = movie.bechdel_score[movie.bechdel_score != 'Missing'].apply(lambda x: int(x))
+#n, bins, patches = plt.hist(bechdel_nonmiss, color = 'g')
+##patches[2].setfc('r') #KR note: why doesn't this work? It works in the example below!
+#plt.title('Hisogram of Test Scores from bechdeltest.org')
+#plt.xlabel('Score on Bechdel Test')
+#plt.ylabel('Number of movies')
+#plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+#plt.xticks(np.arange(4))
+#plt.show()
+
+
+#Example of coloring a rectangle in a histogram
+#import numpy as np
+#import matplotlib.pyplot as plt
+#values =  np.random.randint(51, 140, 1000)
+#n, bins, patches = plt.hist(values, bins=np.arange(50, 140, 2), align='left', color='g')
+#patches[40].set_fc('r')
+#plt.show()
