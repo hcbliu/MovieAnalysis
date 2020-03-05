@@ -12,10 +12,10 @@ DOCUMENTS:
 -docs folder: this contains important info about the project (essentially a subset of our shared google drive)
 
 CODE AND CSVs:
--mastercode.py: this initial code combines the Kaggle and scraping work. It generates movietests_20200227_v2.csv.
--api_dataframe_merge.py: adds synopsis data from the API. It outputs all of the CSV files starting cleanedMovieData and ending with numbers.
--merge_cleaned_movieDF.py: Merges the 7 files starting with cleanedMovieData and creates cleanedMovieDataFinal.csv.
--menu_final.py: This lets users see information from cleanedMovieDataFinal.csv.
+-mastercode.py: this initial code combines the Kaggle and scraping work. It generates movietests_20200227_v2.csv.  
+-api_dataframe_merge.py: adds synopsis data from the API. It outputs all of the CSV files starting cleanedMovieData and ending with numbers.  
+-merge_cleaned_movieDF.py: Merges the 7 files starting with cleanedMovieData and creates cleanedMovieDataFinal.csv.  
+-menu_final.py: This lets users see information from cleanedMovieDataFinal.csv.  
 
  
 Everyone also has an individual branch containing the original work that they sent via email as of 2.26.20.
