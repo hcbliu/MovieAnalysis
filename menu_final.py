@@ -9,7 +9,9 @@ import numpy as np #for plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#Read in CSV:     
+#Read in CSV: 
+#Note: this CSV is the result of processing CSVs from Kaggle, web scraping
+#from bechdeltest.org, and using an API.     
 movie = pd.read_csv("cleanedMovieDataFINAL.csv") #Version from Betty as of Feb 29, 2020, 10:38 PM
 
 #Troubleshooting option for programmer: view dataset
@@ -42,24 +44,28 @@ def main():
     validtitle = True
     while validtitle:
         name = input("Please enter a movie name (or part of a movie name): ")
-        c,name = searchmovie(name)
-        if c >= 0:
-            index = movie[movie['title'] == name].index[0]
-            print('\nMovie title:')
-            print('==============')
-            print(movie.iloc[index]['title'])
-            print('\nYear of release:')
-            print('==================')
-            print(movie.iloc[index]['year'])
-            print('\nPlot summary:')
-            print('=============')
-            print(movie.iloc[index]['synopsis'])
-            selection = menu()
-            tableFunctions(selection, index)
-            validtitle = False
-        else:
-            print("\nPlease enter a valid movie title!")
-            continue
+        try:
+            c,name = searchmovie(name)
+            if c >= 0:
+                index = movie[movie['title'] == name].index[0]
+                print('=============================================')
+                print('Basic Information')
+                print('=============================================')
+                print('\nMovie title:')
+                print(movie.iloc[index]['title'])
+                print('\nYear of release:')
+                print(movie.iloc[index]['year'])
+                print('\nPlot summary:')
+                print(movie.iloc[index]['synopsis'])
+                print('\n=============================================')
+                selection = menu()
+                tableFunctions(selection, index)
+                validtitle = False
+            else:
+                print("\nPlease enter a valid movie title!")
+                continue
+        except:
+            print('\n')
 
 
 # searchmovie()
@@ -80,12 +86,15 @@ def searchmovie(name):
             print(i,'-', t)
             i += 1
             namelist.append(t)
-    c = int(input("\nInput the corresponding number if one of the titles matches your movie or -1 to re-enter!"))
+    c = int(input("\nInput the corresponding number if one of the titles matches your movie or -1 to re-enter: "))
     if c < 0:
         return c,name
     else:
-        name = namelist[c]
-        return c,name
+        try: 
+            name = namelist[c]
+            return c,name
+        except:
+            print('The number you entered was invalid. Please try again.')
  
     
 # menu()
@@ -98,30 +107,48 @@ def menu():
         selection = int(input('''
         Choose one of the following options: \n
         1. See Bechdel Test scores.
-        2. See crew and cast information
-        3. See summary statistics across movies
-        4. Enter a different movie name
+        2. See cast gender information
+        3. See crew gender information
+        4. See summary of gender statistics across all movies
+        5. Enter a different movie name
         0. Quit \n
     Enter '1' for the first option, '2' for the second option, and so on.
     \nEnter option: '''))
         print('\n')
-        if selection not in range(0,5,1): 
-            print('\n ERROR: try entering a number between 1 to 4 (or 0 to QUIT).')
+        if selection not in range(0,6,1): 
+            print('\n ERROR: try entering a number between 1 to 5 (or 0 to QUIT).')
             continue           
         else:
             validSelection = True
             return selection
 
-#This function will be used inside tableFunctions
+#These display functions are used to work around the way that values are 
+#coded as strings.
+            
 # displaypct()
 # Parameters: pctstring, a percentage which is currently read as a string
 # What it does: displays missing or converts to a float
-# Returns: string with 'x%' or 'Missing'
+# Returns: string with 'x%' or 'Missing' or 'Insufficient Sample'
 def displaypct(pctstring):
     if pctstring == 'Missing':
         out = 'Missing'
+    elif pctstring == 'insufficient sample':
+        out = 'insufficient sample'
     else: 
         out = str(int(round(float(pctstring),2)*100)) + '%'
+    return out
+
+# displaypct()
+# Parameters: intstring, an integer which is currently read as a string
+# What it does: displays missing or converts to a float
+# Returns: string with an int or 'Missing' or 'Insufficient Sample'
+def displayint(intstring):
+    if intstring == 'Missing':
+        out = 'Missing'
+    elif intstring == 'insufficient sample':
+        out = 'insufficient sample'
+    else: 
+        out = int(float(intstring))
     return out
 
 # tableFunctions()
@@ -132,31 +159,35 @@ def tableFunctions(s,index):
     valid = True
     while valid:
         if s == 1: 
-            print("Bechdel test results:")
+            print('=============================================')
+            print("Bechdel test results")
+            print('=============================================')
             print("Score: ", movie.iloc[index]['bechdel_score'])
-            print("\nDescription of the score: ", movie.iloc[index]['bechdel_desc'])          
-            plt.close() 
-            bechdel_nonmiss = movie.bechdel_score[movie.bechdel_score != 'Missing'].apply(lambda x: int(x))
-            n, bins, patches = plt.hist(bechdel_nonmiss,bins = np.arange(5)-0.5, color = 'silver')
-            score = int(movie.iloc[index]['bechdel_score'])
-            patches[score].set_fc('blue')
-            plt.title('Bechdel Results in the Context of Full Dataset from bechdeltest.org')
-            plt.xlabel('Score on Bechdel Test')
-            plt.ylabel('Number of movies')
-            plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-            plt.xticks(np.arange(4))
-            plt.show()
-            print('=====================')
+            print("\nDescription of the score: ", movie.iloc[index]['bechdel_desc'])
+            try:
+                plt.close() 
+                bechdel_nonmiss = movie.bechdel_score[movie.bechdel_score != 'Missing'].apply(lambda x: int(x))
+                n, bins, patches = plt.hist(bechdel_nonmiss,bins = np.arange(5)-0.5, color = 'silver')
+                score = int(movie.iloc[index]['bechdel_score'])
+                patches[score].set_fc('blue')
+                plt.title('Bechdel Results in the Context of Full Dataset from bechdeltest.org')
+                plt.xlabel('Score on Bechdel Test')
+                plt.ylabel('Number of movies')
+                plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+                plt.xticks(np.arange(4))
+                plt.show()
+            except:
+                print('\n')
+            print('=============================================')
             
             s = menu()
         elif s == 2: 
-            print('Cast and Crew information:')
-            print('============================')
-            
-            
+            print('=============================================')
+            print('Cast Gender Information')
+            print('=============================================')
             print("Percentage of women in the cast: ", displaypct(movie.iloc[index]['cast_pct_women']))
-            print("Cast members in dataset: ", movie.iloc[index]['cast_n'][0:2]) #this assumes no more than 99 cast members            
-            #pie plot for crew
+            print("Cast members in dataset: ", displayint(movie.iloc[index]['cast_n']))            
+            #pie plot for cast
             try:
                 plt.close()
                 plt.title('Gender Breakdown of the Cast in %s' %(movie.iloc[index]['title']))
@@ -165,35 +196,40 @@ def tableFunctions(s,index):
                 mylabels=['Women','Men'] 
                 plt.pie(values, labels=mylabels, colors = ('blue', 'silver'))
                 plt.show()
+
+                #histogram for cast
+                if ((movie.iloc[index]['cast_pct_women'] != 'Missing') & (movie.iloc[index]['cast_pct_women'] != 'insufficient sample')) == True:
+                    plt.close()
+                    cast_nonmiss = movie.cast_pct_women[(movie.cast_pct_women != 'Missing') &\
+                                                        (movie.cast_pct_women != 'insufficient sample')].\
+                                                        apply(lambda x: float(x))
+                    n, bins, patches = plt.hist(cast_nonmiss, color = 'silver', bins = 15)
+                    for i in range(len(bins)):
+                        if float(movie.iloc[index]['cast_pct_women']) > bins[i]:
+                            bin_number = i
+                    patches[bin_number].set_fc('blue')
+                    plt.title('%s Cast Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
+                    plt.xlabel('% women in the cast')
+                    plt.ylabel('Number of movies')
+                    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+                    plt.xticks(rotation=70)
+                    bins2 = list()
+                    for i in bins:
+                        bins2.append(str(round(i, 2)) + '%')
+                    plt.xticks(bins, bins2)
+                    plt.show()
             except:
                 print("\n")
+            print('=============================================')
             
-            if ((movie.iloc[index]['cast_pct_women'] != 'Missing') & (movie.iloc[index]['cast_pct_women'] != 'insufficient sample')) == True:
-                plt.close()
-                cast_nonmiss = movie.cast_pct_women[(movie.cast_pct_women != 'Missing') &\
-                                                    (movie.cast_pct_women != 'insufficient sample')].\
-                                                    apply(lambda x: float(x))
-                n, bins, patches = plt.hist(cast_nonmiss, color = 'silver', bins = 15)
-                for i in range(len(bins)):
-                    if float(movie.iloc[index]['cast_pct_women']) > bins[i]:
-                        bin_number = i
-                patches[bin_number].set_fc('blue')
-                plt.title('%s Cast Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
-                plt.xlabel('% women in the cast')
-                plt.ylabel('Number of movies')
-                plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-                plt.xticks(rotation=70)
-                bins2 = list()
-                for i in bins:
-                    bins2.append(str(round(i, 2)) + '%')
-                plt.xticks(bins, bins2)
-                plt.show()
-            print('=============================')
-            
+            s = menu()
+        elif s == 3: 
+            print('=============================================')
+            print('Crew Gender Information')
+            print('=============================================')
             print("Percentage of women in the crew: ", displaypct(movie.iloc[index]['crew_pct_women']))
-            print("Crew members in dataset: ", movie.iloc[index]['crew_n'])
-            
-            #pie plot for cast
+            print("Crew members in dataset: ", displayint(movie.iloc[index]['crew_n']))           
+            #pie plot for crew
             try:
                 plt.close()
                 value = float(movie.iloc[index]['crew_pct_women'])
@@ -202,36 +238,36 @@ def tableFunctions(s,index):
                 mylabels=['Women','Men'] 
                 plt.pie(values, labels=mylabels, colors = ('blue', 'silver'))
                 plt.show()
+                if ((movie.iloc[index]['crew_pct_women'] != 'Missing') & (movie.iloc[index]['crew_pct_women'] != 'insufficient sample')) == True:
+                    plt.close()
+                    crew_nonmiss = movie.crew_pct_women[(movie.crew_pct_women != 'Missing') &\
+                                                        (movie.crew_pct_women != 'insufficient sample')].\
+                                                        apply(lambda x: float(x))
+                    n, bins, patches = plt.hist(crew_nonmiss, color = 'silver', bins = 15)
+                    for i in range(len(bins)):
+                        if float(movie.iloc[index]['crew_pct_women']) > bins[i]:
+                            bin_number = i
+                    patches[bin_number].set_fc('blue')
+                    plt.title('%s Crew Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
+                    plt.xlabel('% women in the crew')
+                    plt.ylabel('Number of movies')
+                    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+                    plt.xticks(rotation=70)
+                    bins2 = list()
+                    for i in bins:
+                        bins2.append(str(round(i, 2)) + '%')
+                    plt.xticks(bins, bins2)
+                    plt.show()
             except:
-                print("\n")
-            
-            if ((movie.iloc[index]['crew_pct_women'] != 'Missing') & (movie.iloc[index]['crew_pct_women'] != 'insufficient sample')) == True:
-                plt.close()
-                crew_nonmiss = movie.crew_pct_women[(movie.crew_pct_women != 'Missing') &\
-                                                    (movie.crew_pct_women != 'insufficient sample')].\
-                                                    apply(lambda x: float(x))
-                n, bins, patches = plt.hist(crew_nonmiss, color = 'silver', bins = 15)
-                for i in range(len(bins)):
-                    if float(movie.iloc[index]['crew_pct_women']) > bins[i]:
-                        bin_number = i
-                patches[bin_number].set_fc('blue')
-                plt.title('%s Crew Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
-                plt.xlabel('% women in the crew')
-                plt.ylabel('Number of movies')
-                plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-                plt.xticks(rotation=70)
-                bins2 = list()
-                for i in bins:
-                    bins2.append(str(round(i, 2)) + '%')
-                plt.xticks(bins, bins2)
-                plt.show()
-            print('=============================')
+                print("\n")            
+            print('=============================================')
             
             
             s = menu()
-        elif s == 3: 
-            print("Summary statistics:")
-            print('=====================')
+        elif s == 4: 
+            print('=============================================')
+            print("Analysis Across Movies")
+            print('=============================================')
             pd.set_option('mode.chained_assignment', None)
             
             yr = set()
@@ -239,7 +275,6 @@ def tableFunctions(s,index):
                 yr.add(i)
             yr = list(yr)
             yr.sort()
-            import seaborn as sns
             moviebt_nonmiss = movie[movie.bechdel_score != 'Missing']
             moviebt_nonmiss['bechdel_score'] = pd.to_numeric(moviebt_nonmiss['bechdel_score'])    
             
@@ -251,7 +286,7 @@ def tableFunctions(s,index):
             plt.plot(moviebt_nonmiss['year'], m*moviebt_nonmiss['year'] + b, color='r', linestyle = '--')
             plt.plot(moviebt_nonmiss.groupby('year').mean()['bechdel_score'], color='purple')
             plt.show()
-            print('Average Bechdel test scores looks to be increasing slightly over the years')
+            print('The average Bechdel test scores are increasing slightly over time.')
             print('=============================')
             
             # line graphs showing trends for average cast and crew percentages throughout the years
@@ -266,8 +301,8 @@ def tableFunctions(s,index):
             plt.plot(moviecast_nonmiss['year'], m*moviecast_nonmiss['year'] + b, color='mediumblue', linestyle = ':')
             plt.plot(moviecast_nonmiss.groupby('year').mean()['cast_pct_women'], color = 'forestgreen')
             plt.show()
-            print('Average percentage of women in cast looks to be increasing very little over the years although it is below the desired line')
-            print('There is a sudden increase in the last 5 years and the percanetage has reached 50 in 2017')
+            print('The average percentage of women in the cast looks to be increasing very slightly over the years, although it is below the desired line.')
+            print('There is a sudden increase in the last 5 years, and the percentage has reached 50 in 2017')
             print('=============================')
             
             moviecrew_nonmiss = movie[(movie.crew_pct_women != 'Missing') & (movie.crew_pct_women != 'insufficient sample')]
@@ -282,8 +317,8 @@ def tableFunctions(s,index):
             plt.plot(moviecrew_nonmiss.groupby('year').mean()['crew_pct_women'], color = 'blueviolet')
             plt.show()
             pd.reset_option('mode.chained_assignment')
-            print('Average percentage of women in crew looks to be increasing over the years although it is below the desired line')
-            print('There is a drastic decrease in percentage of women in crew in last 5 years')
+            print('The average percentage of women in crew looks to be increasing over the years, although it is below the desired line at 50%.')
+            print('The data show a drastic decrease in percentage of women in the crew data in last 5 years. This may be due to missing data, so additional analyses would be needed to draw conclusions about this.')
             print('=============================')
             
             #  Correlation and pairgrid to compare the average percentage for cast and crew
@@ -300,12 +335,15 @@ def tableFunctions(s,index):
             plt.title('Linear regression, correlation = ' + corCoeff)
             sns.regplot(x='Avg_cast_pct', y='Avg_crew_pct', data=movie_nonmiss[:28])
             sns.pairplot(data=movie_nonmiss[['Avg_cast_pct','Avg_crew_pct']])
+            plt.ylabel('Average % women in the crew')
+            plt.xlabel('Average % women in the cast')
             plt.show()
-            print('There is barely a positive correlation between the percentage of women in both cast and crew.')
-            print('=============================')
+            print('There a positive relationship between the percentages of women the cast and crew, but the correlation is very low due to an outlier.')
+            print('=============================================')     
             
             s = menu()
-        elif s == 4:
+            
+        elif s == 5:
             name = input("Enter a different movie name: ")
             c,name = searchmovie(name)
             if c >= 0:
@@ -322,7 +360,7 @@ def tableFunctions(s,index):
                 s = menu()
             else:
                 print("\nPlease enter a valid movie title!")
-                s = 4
+                s = 5
         elif s == 0:
             print("\nThank You! Hope you enjoyed this application!")
             valid = False
