@@ -7,11 +7,11 @@ Our goal is to create an app that displays information about movies. For example
 ## Structure  
 The respository is structured as follows:
 
-DOCUMENTS:
--Readme (this doc): summarizes most important information about the project
--docs folder: this contains important info about the project (essentially a subset of our shared google drive)
+DOCUMENTS:  
+-Readme (this doc): summarizes most important information about the project  
+-docs folder: this contains important info about the project (essentially a subset of our shared google drive)  
 
-CODE AND CSVs:
+CODE AND CSVs:  
 -mastercode.py: this initial code combines the Kaggle and scraping work. It generates movietests_20200227_v2.csv.  
 -api_dataframe_merge.py: adds synopsis data from the API. It outputs all of the CSV files starting cleanedMovieData and ending with numbers.  
 -merge_cleaned_movieDF.py: Merges the 7 files starting with cleanedMovieData and creates cleanedMovieDataFinal.csv.  
