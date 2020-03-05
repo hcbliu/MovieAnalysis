@@ -178,10 +178,11 @@ def tableFunctions(s,index):
                     if float(movie.iloc[index]['cast_pct_women']) > bins[i]:
                         bin_number = i
                 patches[bin_number].set_fc('blue')
-                plt.title('%s Cast Results in the Context of the Full Dataset' %(movie.iloc[index]['title']))
+                plt.title('%s Cast Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
                 plt.xlabel('% women in the cast')
                 plt.ylabel('Number of movies')
                 plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+                plt.xticks(rotation=70)
                 bins2 = list()
                 for i in bins:
                     bins2.append(str(round(i, 2)) + '%')
@@ -214,10 +215,11 @@ def tableFunctions(s,index):
                     if float(movie.iloc[index]['crew_pct_women']) > bins[i]:
                         bin_number = i
                 patches[bin_number].set_fc('blue')
-                plt.title('%s Crew Results in the Context of the Full Dataset' %(movie.iloc[index]['title']))
+                plt.title('%s Crew Gender Ratio Compared to Other Movies' %(movie.iloc[index]['title']))
                 plt.xlabel('% women in the crew')
                 plt.ylabel('Number of movies')
                 plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+                plt.xticks(rotation=70)
                 bins2 = list()
                 for i in bins:
                     bins2.append(str(round(i, 2)) + '%')
