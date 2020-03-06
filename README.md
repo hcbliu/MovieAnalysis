@@ -5,7 +5,7 @@ This project evaluates movies by criteria relating to gender.
 Our goal was to create an app to display gender information about movies. For example, a user may want to know how socially conscious the movie Toy Story is. The app prompts the user to type in the name of the movie, and then returns information about the movie which includes: movie title, release year, short synopsis, Bechdel test scores, explanation of the test scores, % of cast that are women. Our dataset contains over 17,000 movies with release dates starting in 1990 up to 2020, although not all fields are available for all movies.
 
 ## Instructions  
-To use the application, clone cleanedMovieDataFinal and menu_final. When you run the program, you will be asked to enter a movie name. After you have selected the movie you were interested in, you would be asked to choose between the following options.
+To use the application, clone cleanedMovieDataFinal.csv and menu_final.py. When you run the program, you will be asked to enter a movie name. After you have selected the movie you were interested in, you will be asked to choose between the following options.
 
     1. See Bechdel Test scores.
     2. See cast gender information
