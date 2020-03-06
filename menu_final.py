@@ -70,7 +70,7 @@ movie = pd.read_csv("cleanedMovieDataFINAL.csv") #Version from Betty as of Feb 2
 # Parameters: none
 # What it does: prompts the user to enter a movie name as input, 
 # calls on searchnames function
-# to find potential matches and ones the name is selected, in prints the 
+# to find potential matches and once the name is selected, in prints the 
 # basic information and calls menu and tableFunctions functions 
 # Returns: basic information of the movie
 
@@ -106,7 +106,7 @@ def main():
 # Parameters: name (entered by user)
 # What it does: uses the movie name from input, uses regular expressions to
 # find different possible movies that match the string entered and prompts
-# the to choose which one they want.
+# them to choose which one they want.
 # Returns: movie title and an int value c (not of high significance - just for 'if' statement)
 def searchmovie(name):
     import re
@@ -402,7 +402,7 @@ def tableFunctions(s,index):
             valid = False
             
 
-# inside this we get the dataframe used for every function 
+# inside this we call the main() function to start the program 
 # Returns: basic information of the movie
 if __name__ == '__main__':
     main()
