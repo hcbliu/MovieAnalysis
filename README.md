@@ -2,10 +2,10 @@
 This project evaluates movies by criteria relating to gender.
 
 ## Abstract  
-Our goal was to create an app to display gender information about movies. For example, a user may want to know how socially conscious the movie Toy Story is. The app prompts the user to type in the name of the movie, and then returns information about the movie which includes: movie title, release year, short synopsis, Bechdel test scores, explanation of the test scores, % of cast that are women. Our dataset contains over 17,000 movies with release dates starting in 1990, although not all fields are available for all movies.
+Our goal was to create an app to display gender information about movies. For example, a user may want to know how socially conscious the movie Toy Story is. The app prompts the user to type in the name of the movie, and then returns information about the movie which includes: movie title, release year, short synopsis, Bechdel test scores, explanation of the test scores, % of cast that are women. Our dataset contains over 17,000 movies with release dates starting in 1990 up to 2020, although not all fields are available for all movies.
 
 ## Instructions  
-To use the application, clone cleanedMovieDataFinal and menu_final. When you run the program, you will receive instructions on how to enter a movie name. Once you have selected a movie, you can choose between the following options:  
+To use the application, clone cleanedMovieDataFinal and menu_final. When you run the program, you will be asked to enter a movie name. After you have selected the movie you were interested in, you would be asked to choose between the following options.
 
     1. See Bechdel Test scores.
     2. See cast gender information
@@ -13,6 +13,7 @@ To use the application, clone cleanedMovieDataFinal and menu_final. When you run
     4. See summary of gender statistics across all movies
     5. Enter a different movie name
 
+You can choose among the following options based on the information you wish to see. 
 
 
 ## Structure  
