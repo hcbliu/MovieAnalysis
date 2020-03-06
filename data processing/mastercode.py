@@ -1,17 +1,18 @@
-##################
-# Movie Analysis #
-##################
+############################################
+# Data Processing -- CSVs and web scraping #
+############################################
 '''
-Project Authors: 
-    -Sinduja Sriskanda 
-    -Hui-Chen Betty Liu 
+Authors of Movie Analysis project: 
+    -Sinduja Sriskanda
+    -Hui-Chen Betty Liu
     -Kamaneeya Kalaga
     -Kayla Reiman
 
 
-Overview: This file contains code by Sindu, Kayla, and Kamaneeya. The end 
-product is a CSV (called movietests_20200227_v2.csv) with movie titles, years, 
-and results of 3 tests:
+Information about this file: This script contains code by Sindu, Kayla, 
+and Kamaneeya. It draws from kaggle CSVs and web-scraping data  to create
+a CSV (called movietests_20200227_v2.csv) with movie titles, years, 
+and results of 3 tests for gender equity:
      % women in the cast (along w/ sample size)
      % women in the crew  (along w/ sample size)
      Bechdel test
@@ -28,7 +29,6 @@ import requests
 #################################
 # Read Movie Datasets from CSVs #
 #################################
-
 #Challenge: datasets are too large to save on GitHub, so individuals using this 
 #code must first download to their local drives. The data are from kaggle:
 #https://www.kaggle.com/rounakbanik/the-movies-dataset
@@ -40,9 +40,12 @@ import requests
 moviemetadata = pd.read_csv('movies_metadata.csv', engine = 'python')
 moviecredits = pd.read_csv('credits.csv', engine = 'python')
 
-#Define a function to view the datasets
-#Input: dsname = dataframe
-#Returned: nothing -- this is just for printing
+
+#Function name: viewdata
+#Purpose: this will help us view/track dataframes throughout the cleaning proccess.
+#Inputs: dsname (a pandas dataframe), desc (a string description of the dataframe)
+#Returned: nothing -- this function is just for printing
+#Author: Kayla
 def viewdata(dsname, desc = 'add description here'):
     name =[x for x in globals() if globals()[x] is dsname][0]
     varlist = [name + '["' + dsname.columns[i] + '"]'for i in range(len(dsname.columns))]
@@ -58,15 +61,16 @@ def viewdata(dsname, desc = 'add description here'):
     print('\n   3. Use head() to see 5 Rows')
     print(dsname.head(), end = '\n') 
     
-    
+
+#View the two original CSVs    
 viewdata(moviemetadata, 'an original CSV from kaggle called movies_metadata.')
 viewdata(moviecredits, 'an original CSV from kaggle called credits.csv.')
 
-#######################
-# Sindu work on CSVs  #
-#######################
+###########################
+# Sinduja's work on CSVs  #
+###########################
 '''
-Author: Sinduja Sriskanda
+Author: Sinduja Sriskanda (ssriskanda)
 Date:  02/26/20
 
 Purpose:
@@ -197,12 +201,12 @@ crewdf.columns = ['name', 'id', 'department', 'job', 'gender']
 #KR addition: view the dataset
 viewdata(crewdf, 'the crew half of the processed form of moviecredits from Kaggle.')
 
-##############################
-# Kamaneeya work on scraping #
-##############################
+################################
+# Kamaneeya's work on scraping #
+################################
 #### BECHDEL TEST WORK #####
 '''
-Author:  Kamaneeya Kalaga
+Author:  Kamaneeya Kalaga (kkalaga)
 Date:  02/21/2020
 
 Purpose:
@@ -255,7 +259,7 @@ bechdel_test.to_csv('bechdel_test_20200227.csv', index=False)
 # Kayla work on merge #
 #######################
 '''
-Author: Kayla Reiman
+Author: Kayla Reiman (kaylareiman1)
 Date:  02/27/20
 
 The goal is to create a dataset of movie titles, which can be queried 
@@ -269,7 +273,10 @@ Steps include the following:
     2. Create a dataset with movies' titles/years
     3. Merge cast, crew, and title information on the movie level
     4. Merge Sindu and Kamaneeya's work into a single dataset based on title/year
-    5. Clean the data (incomplete)
+    5. Clean the data 
+    
+After I export a final CSV, Betty will use this CSV to query the 
+API in a separate program.
     
 '''
 
@@ -393,32 +400,6 @@ print(movietests_widedf_v1[movietests_widedf_v1.year_x != movietests_widedf_v1.y
                            [pd.notnull(movietests_widedf_v1.year_x)]\
                            [pd.notnull(movietests_widedf_v1.year_y)][['year_x', 'year_y']].head(20))
 
-print('''\nDUPLICATE CHECK ON THE TITLE LEVEL:
-      Print 20 observations w/ duplicate titles to see whether they have both CSV and Bechdel data.
-      Note: most of these (except 20,000 Leagues) appear to differ by year.
-      This is good, but more investigation is needed.''')
-t_dups = movietests_widedf_v1.groupby('title_x') # number of people in cast data
-t_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
-[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20)
-
-
-print('''\nDUPLICATE CHECK ON THE TITLE/YEAR LEVEL: 
-         Add year to the group_by and look at whether the data match across title/year duplicates.
-         Note: This is concerning because a few entries (ex. Beneath) have differnet 
-         cast_pct_women values across the two entries.''')
-ty_dups = movietests_widedf_v1.groupby(['title_x', 'year_x']) # number of people in cast data
-print(ty_dups.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
-[['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20))
-
-print('''\nDUPLICATE CHECK ON THE TITLE/YEAR LEVEL - VERSION 2:
-      Re-run the check above limiting to obs with non-missing bechdel_score
-      Note: it is concerning that some movies (ex. Beneath, Emma) have different 
-      cast_pct_women values.''')
-ty_dups2 = movietests_widedf_v1[(pd.isnull(movietests_widedf_v1.bechdel_score)==0)]\
-         .groupby(['title_x', 'year_x']) # number of people in cast data
-print(ty_dups2.filter(lambda x: len(x) > 1).sort_values(by = 'title_x')\
-        [['title_x','year_x', 'cast_pct_women', 'bechdel_score']].head(20))
-
 #### STEP 5: DATA CLEANING ####
 #Rename versions of title/year we want to keep
 movietests_widedf_v2 = movietests_widedf_v1.rename({'title_x' : 'title', \
@@ -428,12 +409,17 @@ movietests_widedf_v2 = movietests_widedf_v1.rename({'title_x' : 'title', \
 movietests_widedf_v2.drop(['mergekey', 'title_y','year_y'], axis=1, inplace = True)
 
 #Address the insufficient sample on certain movies
+#Note: In retrospect, this should have been part of the menu program instead
+#of the data cleaning, but since Betty ran her API work (that took an 
+#entire weekend!) based on the CSV exported with these cleaning steps,
+#we decided not to change it later.
 movietests_widedf_v2['cast_pct_women'][movietests_widedf_v2['cast_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2['crew_pct_women'][movietests_widedf_v2['crew_n'] <= 10] \
 = 'insufficient sample'
 movietests_widedf_v2 = movietests_widedf_v2.fillna('Missing')
 
+#Quick quality check
 print('Check that missing values have been replaced by printing 20 obs from the kaggle data')
 print(movietests_widedf_v2[['crew_pct_women', 'cast_pct_women']].head(20))
 
