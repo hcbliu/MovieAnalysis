@@ -23,6 +23,8 @@ def fetchMovie(movie):
         df.rename(columns={"title" : "Title", "release_date" : "Release Date", "overview" : "Synopsis"}, inplace=True)
         return df[['Title', 'Release Date', 'Synopsis']]
 
+# WARNING: it took me 25-35 minutes to generate each part of the 7 csv files. That is why I chose to cache it as opposed to building 
+# the API request into the mastercode. Also, I hit the an API request limit with my first API key, and had to get a second API key to complete this project.
 # For caching part 1 of the dataframe, looping over the movieDF dataframe from row 0 to 7500
 for line in movieDF.index[:7500]:
     movieYear = movieDF['year'].iloc[line] 
