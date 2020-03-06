@@ -74,7 +74,7 @@ Author: Sinduja Sriskanda (ssriskanda)
 Date:  02/26/20
 
 Purpose:
-The cast and crew columns were not not in an easily
+The cast and crew columns were not in an easily
 usable format, so Sindu processed the CSVs to create two dataframes:
    1) castdf shows which cast members are in each movie (each row has a movie/person combination)
    2) crewdf shows which crew members are in each movie (also movie/person level)
@@ -96,7 +96,7 @@ for string in cast.index:
     metacast.append(entry)
 
 
-#All of these metacast lists is just different manipulation of the same data
+#All of these metacast lists are just different manipulation of the same data
 #to make it a friendlier format. This is just another "meta list" to remove
 #characters and make it a dictionary format so it can be converted later on
 #The fact that the string has the list [] is making it difficult to convert so
