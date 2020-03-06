@@ -1,20 +1,51 @@
 ##################
 # Movie Analysis #
 ##################
-#Authors: Sinduja Sriskanda, Hui-Chen Betty Liu, Kamaneeya Kalaga, Kayla Reiman
+'''
 
-#Import libraries
+Instructions:
+First, save cleanedMovieDataFINAL locally and set your working directory.
+Then, when you run the program, you will be asked to enter a movie name. 
+After you have selected the movie you were interested in, you will
+be asked to choose between the following options.
+
+    1. See Bechdel Test scores.
+    2. See cast gender information
+    3. See crew gender information
+    4. See summary of gender statistics across all movies
+    5. Enter a different movie name
+
+Project Authors and their GitHub usernames: 
+    -Sinduja Sriskanda (ssriskanda)
+    -Hui-Chen Betty Liu (hcbliu)
+    -Kamaneeya Kalaga (kkalaga)
+    -Kayla Reiman (kaylareiman1)
+    
+'''
+
+####################
+# Import libraries #
+####################
 import pandas as pd
 import numpy as np #for plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#Read in CSV: 
+###############
+# Read in CSV #
+###############
+
 #Note: this CSV is the result of processing CSVs from Kaggle, web scraping
-#from bechdeltest.org, and using an API.     
+#from bechdeltest.org, and using an API. For more information on this,
+#see the data processing folder.    
 movie = pd.read_csv("cleanedMovieDataFINAL.csv") #Version from Betty as of Feb 29, 2020, 10:38 PM
 
-#Troubleshooting option for programmer: view dataset
+
+########################
+# View Data (Optional) #
+########################
+#If the programmer wants to learn more about the dataset, they can uncomment
+#this code.
 #def viewdata(dsname, desc = 'add description here'):
 #    name =[x for x in globals() if globals()[x] is dsname][0]
 #    varlist = [name + '["' + dsname.columns[i] + '"]'for i in range(len(dsname.columns))]
@@ -32,6 +63,9 @@ movie = pd.read_csv("cleanedMovieDataFINAL.csv") #Version from Betty as of Feb 2
 #    
 #viewdata(movie, 'our main dataset.') 
 
+################
+# Full Program #
+################
 # main()
 # Parameters: none
 # What it does: prompts the user to enter a movie name as input, 
@@ -99,7 +133,7 @@ def searchmovie(name):
     
 # menu()
 # Parameters: none
-# What it does: it prompts the user to input an integer between 1 and 4
+# What it does: it prompts the user to input an integer between 1 and 5 or 0
 # Returns: selection, an integer variable
 def menu(): 
     validSelection = False
@@ -186,9 +220,11 @@ def tableFunctions(s,index):
             print('Cast Gender Information')
             print('=============================================')
             print("Percentage of women in the cast: ", displaypct(movie.iloc[index]['cast_pct_women']))
-            print("Cast members in dataset: ", displayint(movie.iloc[index]['cast_n']))            
-            #pie plot for cast
+            print("Cast members in dataset: ", displayint(movie.iloc[index]['cast_n']))
+            #Coded these in try/except blocks just to make sure
+            #that the app doesn't break for users.            
             try:
+                #pie plot for cast of this movie
                 plt.close()
                 plt.title('Gender Breakdown of the Cast in %s' %(movie.iloc[index]['title']))
                 value = float(movie.iloc[index]['cast_pct_women'])
@@ -196,7 +232,6 @@ def tableFunctions(s,index):
                 mylabels=['Women','Men'] 
                 plt.pie(values, labels=mylabels, colors = ('blue', 'silver'))
                 plt.show()
-
                 #histogram for cast
                 if ((movie.iloc[index]['cast_pct_women'] != 'Missing') & (movie.iloc[index]['cast_pct_women'] != 'insufficient sample')) == True:
                     plt.close()
@@ -227,10 +262,12 @@ def tableFunctions(s,index):
             print('=============================================')
             print('Crew Gender Information')
             print('=============================================')
+            #Note: This is very similar code to what was just written above
+            #for the cast gender information.
             print("Percentage of women in the crew: ", displaypct(movie.iloc[index]['crew_pct_women']))
             print("Crew members in dataset: ", displayint(movie.iloc[index]['crew_n']))           
-            #pie plot for crew
             try:
+                #Pie chart for this movie
                 plt.close()
                 value = float(movie.iloc[index]['crew_pct_women'])
                 plt.title('Gender Breakdown of the Crew in %s' %(movie.iloc[index]['title']))
@@ -238,6 +275,7 @@ def tableFunctions(s,index):
                 mylabels=['Women','Men'] 
                 plt.pie(values, labels=mylabels, colors = ('blue', 'silver'))
                 plt.show()
+                #Histogram for contextualizing this movie
                 if ((movie.iloc[index]['crew_pct_women'] != 'Missing') & (movie.iloc[index]['crew_pct_women'] != 'insufficient sample')) == True:
                     plt.close()
                     crew_nonmiss = movie.crew_pct_women[(movie.crew_pct_women != 'Missing') &\
@@ -260,8 +298,7 @@ def tableFunctions(s,index):
                     plt.show()
             except:
                 print("\n")            
-            print('=============================================')
-            
+            print('=============================================')        
             
             s = menu()
         elif s == 4: 
@@ -292,7 +329,6 @@ def tableFunctions(s,index):
             # line graphs showing trends for average cast and crew percentages throughout the years
             moviecast_nonmiss = movie[(movie.cast_pct_women != 'Missing') & (movie.cast_pct_women != 'insufficient sample')]
             moviecast_nonmiss['cast_pct_women'] = pd.to_numeric(moviecast_nonmiss['cast_pct_women'])*100    
-
             plt.close()
             plt.title('Average percentage of women in cast over the years')
             plt.ylim(ymin=0, ymax=100)
