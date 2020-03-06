@@ -85,7 +85,7 @@ cast = moviecredits[['cast', 'id']]
 
 #As mentioned before, I didn't know if the dataframe was
 #stopping me from manipulating the data, so I decided to append it into a list
-#this was when I realized that they were strings...not dictionaries
+#this was when I realized that they were strings, not dictionaries
 metacast = []
 for string in cast.index:
     entry = [cast['cast'][string], cast['id'][string]]
@@ -97,8 +97,8 @@ for string in cast.index:
 #characters and make it a dictionary format so it can be converted later on
 #The fact that the string has the list [] is making it difficult to convert so
 #I removed those and made ' to "
-#**Also had to make a new list since I tried to change it with metacast and nothing was
-#changing.. it's a little clunky but it works sooooooo ya
+#**Also had to make a new list since I tried to change it using the metacast list and nothing was
+#changing and I kept getting an error.. it's a little clunky but it works!! 
 
 metacast2 = []
 for i in range(len(metacast)):
@@ -111,8 +111,8 @@ for i in range(len(metacast)):
 
 
 #the final cast list is the list of dictionaries this should be producting
-#used eval() function since JSON wasn't working for me. Managed to recover
-#29288 flims (out of 45476 films)
+#used eval() function since JSON wasn't working for me (kept receiving multiple errors). Managed to recover
+#29288 flims (out of 45476 films). Any that had syntax error I disregarded. 
 
 finalcast = []
 for i in range(len(metacast2)):
@@ -147,7 +147,7 @@ castdf.columns = ['name', 'id', 'gender']
 viewdata(castdf, 'half of the processed form of moviecredits from Kaggle.')
 
 #PART 2: CREATION OF DATAFRAME FOR CREW
-#(it's basically the same stuff I was doing before)
+#(it's basically the same stuff I was doing before with cast except this is with crew information)
 #I decided to add information on Department and Job in case we want to look into those
 
 crew = moviecredits[['crew', 'id']]
